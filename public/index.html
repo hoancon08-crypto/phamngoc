@@ -199,6 +199,144 @@
       background: #f8fafc;
       border-color: #e2e8f0;
     }
+
+    /* Subfolder Card Styles */
+    .subfolder-box {
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-left: 4px solid #15803d;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .subfolder-box:hover {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      border-left-color: #16a34a;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .subfolder-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .subfolder-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .subfolder-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .subfolder-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .subfolder-code-line {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cert-code-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid #bfdbfe;
+      white-space: nowrap;
+    }
+
+    .subfolder-owner-badge {
+      font-size: 12.5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .subfolder-owner-badge.has-owner {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+
+    .subfolder-owner-badge.no-owner {
+      background: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fdba74;
+    }
+
+    .subfolder-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 9px;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    .btn-subfolder {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 7px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .btn-subfolder:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .btn-subfolder.btn-owner {
+      background: #f0fdf4;
+      color: #15803d;
+      border-color: #86efac;
+    }
+
+    .btn-subfolder.btn-owner:hover {
+      background: #dcfce7;
+    }
+
+    .btn-subfolder.btn-qr {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #93c5fd;
+    }
+
+    .btn-subfolder.btn-qr:hover {
+      background: #dbeafe;
+    }
   </style>
 </head>
 <body>
@@ -618,6 +756,61 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: TẠO THƯ MỤC CON MỚI ================= -->
+  <div id="newSubfolderModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px; text-align: left;">
+      <button class="modal-close-btn" onclick="closeNewSubfolderModal()">&times;</button>
+      
+      <div style="font-size: 19px; font-weight: 800; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+        <span>📂</span> Tạo Thư Mục Con Mới
+      </div>
+      <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+        Thư mục mẹ: <strong id="subfolderParentTitle" style="color: #0f172a;">Long Tranh Hổ Đấu</strong>
+      </div>
+
+      <form id="newSubfolderForm" onsubmit="handleCreateSubfolder(event)">
+        <input type="hidden" id="subfolderParentTitleHidden">
+
+        <!-- Phiên bản & Mã -->
+        <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 11px; text-transform: uppercase; color: #166534; font-weight: 700;">Thư mục con (Phiên bản):</div>
+              <div id="subfolderEditionDisplay" style="font-size: 20px; font-weight: 800; color: #15803d; margin-top: 2px;">
+                Bản 02 / 50
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 11px; color: #64748b;">Mã chứng nhận:</div>
+              <div id="subfolderCodeDisplay" style="font-size: 13px; font-weight: 700; color: #1e293b; font-family: monospace;">
+                KND-LTHD-2026-002
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="subfolderEditionInput">
+        <input type="hidden" id="subfolderCodeInput">
+
+        <!-- Khách hàng sở hữu -->
+        <div class="form-group">
+          <label class="form-label" for="subfolderOwnerInput">Tên khách hàng sở hữu: <span style="font-size: 12px; color: #64748b; font-weight: normal;">(Có thể để trống và sửa sau)</span></label>
+          <input type="text" id="subfolderOwnerInput" class="form-input" placeholder="VD: Nguyễn Văn B, Anh Hùng..." style="font-size: 15px; font-weight: 600;" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('btnSubmitSubfolder').click();}">
+          <div class="tag-help">Tên khách hàng sẽ hiển thị ngay khi khách quét mã QR trên tranh</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" id="btnSubmitSubfolder" class="btn-primary" style="flex: 1; background: #15803d; border-color: #15803d; font-size: 15px; padding: 12px;">
+            💾 Lưu Thư Mục Con & Xuất QR
+          </button>
+          <button type="button" class="btn-secondary-sm" style="padding: 12px 18px;" onclick="closeNewSubfolderModal()">
+            Hủy
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     let currentCertificates = [];
     let currentArtworks = [];
@@ -1025,42 +1218,56 @@
               </div>
             </div>
 
-            <!-- Danh sách các bản đã cấp mã (Mở rộng mặc định) -->
+            <!-- Danh sách các Thư Mục Con (Mở rộng mặc định) -->
             <div id="${folderId}" class="folder-body expanded">
-              <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <input type="text" placeholder="🔍 Tìm kiếm bản số (VD: 01) hoặc tên khách..." 
-                  style="width: 100%; max-width: 380px; padding: 7px 12px; font-size: 13px; border: 1.5px solid #cbd5e1; border-radius: 8px;"
+              <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <input type="text" placeholder="🔍 Tìm kiếm thư mục con (VD: 01) hoặc tên khách..." 
+                  style="flex: 1; min-width: 200px; max-width: 380px; padding: 8px 12px; font-size: 13px; border: 1.5px solid #cbd5e1; border-radius: 8px;"
                   oninput="filterFolderItems('${folderId}', this.value)">
-                <span style="font-size: 12px; color: #64748b; white-space: nowrap;">Tổng ${group.items.length} bản</span>
+                
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn-primary" style="background: #15803d; border-color: #15803d; padding: 7px 14px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;" onclick="openNewSubfolderModal('${group.title.replace(/'/g, "\\'")}', ${group.items.length + 1}, ${group.totalLimit})">
+                    📁 ➕ Tạo Thư Mục Con (Bản ${String(group.items.length + 1).padStart(2, '0')})
+                  </button>
+                  <span style="font-size: 12px; color: #64748b; font-weight: 600;">Tổng ${group.items.length} bản</span>
+                </div>
               </div>
 
-              <div id="itemsContainer_${folderId}" style="max-height: 480px; overflow-y: auto; padding-right: 4px;">
+              <div id="itemsContainer_${folderId}" style="max-height: 520px; overflow-y: auto; padding-right: 4px;">
                 ${group.items.map(c => `
-                  <div class="sub-edition-item item-row" data-search="${c.edition} ${c.certCode} ${c.owner || ''}">
-                    <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
-                      <span style="font-size: 13px; font-weight: 800; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 8px; border-radius: 6px; white-space: nowrap;">
-                        Bản ${c.edition}
-                      </span>
-                      <div style="min-width: 0;">
-                        <div style="font-size: 12px; font-weight: 700; color: #334155;">${c.certCode}</div>
-                        <div style="font-size: 12px; color: ${c.owner && c.owner !== 'Chưa kích hoạt' ? '#166534; font-weight: 700;' : '#ea580c; font-weight: 600;'}">
-                          👤 ${c.owner && c.owner !== 'Chưa kích hoạt' ? `Khách: <strong>${c.owner}</strong>` : 'Chưa có tên khách'}
+                  <div class="subfolder-box item-row" data-search="${c.edition} ${c.certCode} ${c.owner || ''}">
+                    <!-- Dòng tiêu đề thư mục con -->
+                    <div class="subfolder-top">
+                      <div class="subfolder-name-wrap">
+                        <span class="subfolder-icon">📂</span>
+                        <div>
+                          <div class="subfolder-title">
+                            Thư mục con: <strong>Bản ${c.edition}</strong>
+                          </div>
+                          <div class="subfolder-code-line">
+                            Mã: <code class="cert-code-pill">${c.certCode}</code>
+                          </div>
                         </div>
+                      </div>
+                      
+                      <div class="subfolder-owner-badge ${c.owner && c.owner !== 'Chưa kích hoạt' ? 'has-owner' : 'no-owner'}">
+                        ${c.owner && c.owner !== 'Chưa kích hoạt' ? `👤 Khách: <strong>${c.owner}</strong>` : '⚪ Chưa có tên khách'}
                       </div>
                     </div>
 
-                    <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
-                      <button type="button" class="btn-secondary-sm" style="color: #15803d; border-color: #86efac; background: #f0fdf4; font-weight: 700; padding: 5px 10px; font-size: 12px;" onclick="event.stopPropagation(); openQuickEditOwner('${c.certCode}', '${c.edition}', '${c.owner || ''}', '${group.title}')" title="Cập nhật tên khách hàng sở hữu">
+                    <!-- Các nút chức năng của thư mục con -->
+                    <div class="subfolder-actions">
+                      <button type="button" class="btn-subfolder btn-owner" onclick="event.stopPropagation(); openQuickEditOwner('${c.certCode}', '${c.edition}', '${c.owner || ''}', '${group.title}')" title="Cập nhật tên khách hàng sở hữu">
                         👤 Sửa Tên Khách
                       </button>
-                      <button type="button" class="btn-icon-action btn-qr" onclick="event.stopPropagation(); showQrModalForCert('${c.certCode}')" title="Xem & in mã QR">
-                        📲 QR
+                      <button type="button" class="btn-subfolder btn-qr" onclick="event.stopPropagation(); showQrModalForCert('${c.certCode}')" title="Xem & in mã QR">
+                        📲 Xem QR & In Tem
                       </button>
-                      <button type="button" class="btn-icon-action" onclick="event.stopPropagation(); loadCertToEdit('${c.certCode}')" title="Chỉnh sửa toàn bộ thông tin">
-                        ✏️ Sửa
+                      <button type="button" class="btn-subfolder" onclick="event.stopPropagation(); loadCertToEdit('${c.certCode}')" title="Chỉnh sửa toàn bộ thông tin">
+                        ✏️ Sửa Chi Tiết
                       </button>
-                      <a href="/verify/${encodeURIComponent(c.certCode)}" target="_blank" class="btn-icon-action" onclick="event.stopPropagation()" title="Xem trang khách hàng">
-                        👁️
+                      <a href="/verify/${encodeURIComponent(c.certCode)}" target="_blank" class="btn-subfolder" onclick="event.stopPropagation()" title="Xem trang khách hàng">
+                        👁️ Xem Trang Quét
                       </a>
                     </div>
                   </div>
@@ -1070,6 +1277,92 @@
           </div>
         `;
       }).join('');
+    }
+
+    // Modal: Tạo Thư Mục Con Mới
+    function openNewSubfolderModal(parentTitle, nextSerial, totalLimit) {
+      const art = currentArtworks.find(a => a.title.trim().toLowerCase() === parentTitle.trim().toLowerCase());
+      const total = totalLimit || art?.totalLimit || 50;
+      const serial = nextSerial || (getHighestSerialForTitle(parentTitle) + 1);
+
+      const padLen = total >= 100 ? 3 : 2;
+      const editionStr = `${String(serial).padStart(padLen, '0')} / ${total}`;
+      const abbr = getTitleAbbreviation(parentTitle);
+      const year = art?.releaseYear || new Date().getFullYear();
+      const codeStr = `KND-${abbr}-${year}-${String(serial).padStart(3, '0')}`;
+
+      document.getElementById('subfolderParentTitle').textContent = parentTitle;
+      document.getElementById('subfolderParentTitleHidden').value = parentTitle;
+      document.getElementById('subfolderEditionDisplay').textContent = `Bản ${editionStr}`;
+      document.getElementById('subfolderCodeDisplay').textContent = codeStr;
+      document.getElementById('subfolderEditionInput').value = editionStr;
+      document.getElementById('subfolderCodeInput').value = codeStr;
+      document.getElementById('subfolderOwnerInput').value = '';
+
+      document.getElementById('newSubfolderModal').classList.add('active');
+      setTimeout(() => {
+        document.getElementById('subfolderOwnerInput').focus();
+      }, 100);
+    }
+
+    function closeNewSubfolderModal() {
+      document.getElementById('newSubfolderModal').classList.remove('active');
+    }
+
+    async function handleCreateSubfolder(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitSubfolder');
+      const oldText = btn.innerHTML;
+      btn.innerHTML = '⏳ Đang lưu...';
+      btn.disabled = true;
+
+      try {
+        const parentTitle = document.getElementById('subfolderParentTitleHidden').value;
+        const art = currentArtworks.find(a => a.title.trim().toLowerCase() === parentTitle.trim().toLowerCase());
+
+        const edition = document.getElementById('subfolderEditionInput').value;
+        const certCode = document.getElementById('subfolderCodeInput').value;
+        const owner = document.getElementById('subfolderOwnerInput').value.trim();
+
+        const formData = new FormData();
+        formData.append('title', parentTitle);
+        formData.append('edition', edition);
+        formData.append('certCode', certCode);
+        formData.append('size', art?.size || '50 x 70 cm');
+        formData.append('releaseYear', art?.releaseYear || '2026');
+        formData.append('author', art?.author || 'Phạm Ngọc\n(Kột Nhà Decor)');
+        formData.append('owner', owner || 'Chưa kích hoạt');
+        formData.append('verificationStatus', 'verified');
+        formData.append('verificationStatusText', 'ĐÃ XÁC THỰC');
+        formData.append('existingImage', art?.image || '/assets/sample-artwork.jpg');
+
+        const res = await fetch('/api/certificates', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          alert('Lỗi: ' + (errData.error || 'Không thể tạo thư mục con'));
+          return;
+        }
+
+        const savedCert = await res.json();
+        closeNewSubfolderModal();
+
+        await loadArtworkFolders();
+        await loadAllCertificates();
+
+        // Show QR modal
+        showQrModalForCert(savedCert.certCode);
+
+      } catch (err) {
+        console.error(err);
+        alert('Lỗi kết nối máy chủ');
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
     }
 
     function toggleFolder(folderId) {
