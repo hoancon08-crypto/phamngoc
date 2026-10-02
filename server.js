@@ -79,17 +79,10 @@ function getLocalIp() {
   return 'localhost';
 }
 
-// Helper: Get public tunnel URL if running
+// Helper: Get public URL
 function getPublicTunnelUrl() {
-  if (currentPublicUrl) return currentPublicUrl;
-  const tunnelFile = path.join(__dirname, 'data', 'tunnel.txt');
-  if (fs.existsSync(tunnelFile)) {
-    try {
-      const url = fs.readFileSync(tunnelFile, 'utf8').trim();
-      if (url.startsWith('http')) return url;
-    } catch (e) {}
-  }
-  return process.env.PUBLIC_URL || '';
+  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL;
+  return 'https://phamngoc.onrender.com';
 }
 
 // API: System info (for QR scanning directly to phone on LAN or Internet)
@@ -267,7 +260,7 @@ app.get('/api/qr/:id', async (req, res) => {
     const customBase = req.query.baseUrl;
     const publicTunnel = getPublicTunnelUrl();
     let targetUrl;
-    if (customBase) {
+    if (customBase && !customBase.includes('192.168.') && !customBase.includes('localhost')) {
       targetUrl = `${customBase.replace(/\/$/, '')}/verify/${encodeURIComponent(cert.certCode || cert.id)}`;
     } else if (publicTunnel) {
       targetUrl = `${publicTunnel.replace(/\/$/, '')}/verify/${encodeURIComponent(cert.certCode || cert.id)}`;

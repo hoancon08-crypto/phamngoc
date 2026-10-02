@@ -378,16 +378,14 @@
         const res = await fetch('/api/info');
         if (res.ok) {
           systemInfo = await res.json();
-          document.getElementById('detectedLanIp').textContent = systemInfo.lanUrl;
+          document.getElementById('detectedLanIp').textContent = systemInfo.publicUrl || 'https://phamngoc.onrender.com';
           
           const savedCustomUrl = localStorage.getItem('custom_scan_base_url');
-          if (savedCustomUrl) {
+          if (savedCustomUrl && !savedCustomUrl.includes('192.168.')) {
             document.getElementById('customBaseUrlInput').value = savedCustomUrl;
           } else {
-            // Default to lanUrl if on localhost
-            document.getElementById('customBaseUrlInput').value = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-              ? systemInfo.lanUrl
-              : window.location.origin;
+            localStorage.removeItem('custom_scan_base_url');
+            document.getElementById('customBaseUrlInput').value = 'https://phamngoc.onrender.com';
           }
         }
       } catch (e) {
@@ -395,14 +393,15 @@
       }
     }
 
-    // Get active base URL for QR scanning
+    // Get active base URL for QR scanning (ALWAYS use permanent 24/7 cloud URL)
     function getActiveBaseUrl() {
       const custom = localStorage.getItem('custom_scan_base_url');
-      if (custom) return custom.replace(/\/$/, '');
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return systemInfo.lanUrl || window.location.origin;
+      if (custom && !custom.includes('192.168.')) return custom.replace(/\/$/, '');
+      if (systemInfo && systemInfo.publicUrl) return systemInfo.publicUrl.replace(/\/$/, '');
+      if (window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('192.168.')) {
+        return window.location.origin;
       }
-      return window.location.origin;
+      return 'https://phamngoc.onrender.com';
     }
 
     // Load Certificates
