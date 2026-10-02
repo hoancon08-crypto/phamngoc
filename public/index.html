@@ -267,7 +267,24 @@
             <span>📝</span> Thông Tin Chứng Nhận
           </div>
 
-          <!-- Tên tác phẩm -->
+          <!-- Thư mục tranh / Bộ sưu tập -->
+          <div class="form-group" style="background: #fff7ed; border: 1.5px solid #fdba74; border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" style="margin-bottom: 0; color: #9a3412; font-weight: 800; font-size: 14px;" for="selectArtworkFolder">
+                📁 Thư mục tác phẩm:
+              </label>
+              <button type="button" class="btn-secondary-sm" style="padding: 4px 10px; font-size: 12px; color: #ea580c; border: 1.5px solid #ea580c; background: #fff; font-weight: 700; border-radius: 6px;" onclick="openNewFolderModal()">
+                ➕ Tạo thư mục mới
+              </button>
+            </div>
+            <select id="selectArtworkFolder" class="form-select" style="font-weight: 700; font-size: 15px; color: #1e293b;" onchange="onArtworkFolderDropdownChanged(this.value)">
+              <option value="Long Tranh Hổ Đấu">📁 Long Tranh Hổ Đấu</option>
+            </select>
+            <div class="tag-help" style="color: #c2410c; margin-top: 5px;">
+              💡 Chọn tranh để in số tiếp theo, hoặc bấm <strong>"+ Tạo thư mục mới"</strong> để thêm tranh mới
+            </div>
+          </div>
+
           <!-- Tên tác phẩm -->
           <div class="form-group">
             <label class="form-label" for="inputTitle">Tác phẩm:</label>
@@ -373,13 +390,18 @@
     <!-- ================= TAB 2: DANH SÁCH TÁC PHẨM ĐÃ LƯU ================= -->
     <div id="tabContentList" class="tab-content">
       <div class="editor-card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
           <div class="card-title" style="margin-bottom: 0;">
             <span>📚</span> Danh Sách Tranh Đã Cấp Mã
           </div>
-          <button class="btn-secondary-sm" onclick="prepareNextCertificate()">
-            ➕ Thêm mới
-          </button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-primary" style="background: #ea580c; border-color: #ea580c; padding: 7px 14px; font-size: 13px;" onclick="openNewFolderModal()">
+              📁 + Tạo Thư Mục Mới
+            </button>
+            <button type="button" class="btn-secondary-sm" onclick="prepareNextCertificate()">
+              ➕ Thêm bản mới
+            </button>
+          </div>
         </div>
 
         <div id="certificatesList">
@@ -522,8 +544,83 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: TẠO THƯ MỤC TRANH MỚI ================= -->
+  <div id="newFolderModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 520px; text-align: left;">
+      <button class="modal-close-btn" onclick="closeNewFolderModal()">&times;</button>
+      
+      <div style="font-size: 19px; font-weight: 800; color: #0f172a; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+        <span>📁</span> Tạo Thư Mục Tranh Mới
+      </div>
+      <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+        Mỗi tác phẩm tranh (VD: <em>Mã Đáo Thành Công</em>, <em>Thuận Buồm Xuôi Gió</em>) là một thư mục riêng để quản lý các bản in giới hạn (01/50, 02/50...).
+      </div>
+
+      <form id="newFolderForm" onsubmit="handleCreateArtworkFolder(event)">
+        <!-- Tên tác phẩm -->
+        <div class="form-group">
+          <label class="form-label" for="folderInputTitle">Tên tranh / Tác phẩm: <span style="color: red;">*</span></label>
+          <input type="text" id="folderInputTitle" class="form-input" required placeholder="VD: Mã Đáo Thành Công, Thuận Buồm Xuôi Gió..." style="font-size: 15px; font-weight: 700;">
+          <div class="tag-help">Tên này sẽ tự sinh mã viết tắt (VD: Mã Đáo Thành Công ➔ MDTC)</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <!-- Giới hạn bản in -->
+          <div class="form-group">
+            <label class="form-label" for="folderInputTotal">Giới hạn số bản (XX):</label>
+            <input type="number" id="folderInputTotal" class="form-input" min="1" value="50" style="font-weight: 700; text-align: center;">
+            <div class="tag-help">Số bản in giới hạn (VD: 50)</div>
+          </div>
+
+          <!-- Năm phát hành -->
+          <div class="form-group">
+            <label class="form-label" for="folderInputYear">Năm phát hành:</label>
+            <input type="text" id="folderInputYear" class="form-input" value="2026" style="text-align: center;">
+          </div>
+        </div>
+
+        <!-- Kích thước -->
+        <div class="form-group">
+          <label class="form-label" for="folderInputSize">Kích thước khung tranh:</label>
+          <input type="text" id="folderInputSize" class="form-input" value="50 x 70 cm" placeholder="VD: 50 x 70 cm, 60 x 90 cm...">
+        </div>
+
+        <!-- Tác giả -->
+        <div class="form-group">
+          <label class="form-label" for="folderInputAuthor">Tác giả / Nghệ nhân:</label>
+          <textarea id="folderInputAuthor" class="form-textarea" rows="2">Phạm Ngọc&#10;(Kột Nhà Decor)</textarea>
+        </div>
+
+        <!-- Ảnh đại diện tranh -->
+        <div class="form-group">
+          <label class="form-label">Ảnh đại diện tranh:</label>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <img id="folderImagePreview" src="/assets/sample-artwork.jpg" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1.5px solid #cbd5e1;">
+            <div style="flex: 1;">
+              <input type="file" id="folderImageFile" accept="image/*" style="display: none;" onchange="handleFolderImageSelected(this)">
+              <button type="button" class="btn-secondary-sm" style="padding: 7px 12px; font-size: 13px;" onclick="document.getElementById('folderImageFile').click()">
+                📷 Chọn ảnh tác phẩm
+              </button>
+              <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;">Để trống sẽ dùng ảnh mẫu mặc định</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" id="btnSubmitFolder" class="btn-primary" style="flex: 1; background: #ea580c; border-color: #ea580c; font-size: 15px; padding: 12px;">
+            💾 Tạo Thư Mục & Bắt Đầu Cấp Bản 01
+          </button>
+          <button type="button" class="btn-secondary-sm" style="padding: 12px 18px;" onclick="closeNewFolderModal()">
+            Hủy
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     let currentCertificates = [];
+    let currentArtworks = [];
     let systemInfo = { localIp: 'localhost', port: 3000, baseUrl: window.location.origin, lanUrl: window.location.origin };
     let currentActiveQrUrl = '';
     let currentCertCode = '';
@@ -531,6 +628,7 @@
     // Initialize on load
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchSystemInfo();
+      await loadArtworkFolders();
       await loadAllCertificates();
       setTodayDateIfNotSet();
       prepareNextCertificate();
@@ -547,6 +645,7 @@
       } else if (tab === 'list') {
         document.getElementById('tabContentList').classList.add('active');
         document.getElementById('tabBtnList').classList.add('active');
+        loadArtworkFolders();
         loadAllCertificates();
       } else if (tab === 'preview') {
         document.getElementById('tabContentPreview').classList.add('active');
@@ -587,6 +686,185 @@
       return 'https://phamngoc.onrender.com';
     }
 
+    // Load Artwork Folders
+    async function loadArtworkFolders() {
+      try {
+        const res = await fetch('/api/artworks');
+        if (res.ok) {
+          currentArtworks = await res.json();
+          updateArtworkFolderDropdown();
+        }
+      } catch (err) {
+        console.error('Error loading artwork folders:', err);
+      }
+    }
+
+    function updateArtworkFolderDropdown() {
+      const select = document.getElementById('selectArtworkFolder');
+      if (!select) return;
+
+      const previousVal = select.value || document.getElementById('inputTitle').value.trim();
+      select.innerHTML = '';
+
+      if (!currentArtworks || currentArtworks.length === 0) {
+        select.innerHTML = '<option value="Long Tranh Hổ Đấu">📁 Long Tranh Hổ Đấu</option>';
+        return;
+      }
+
+      currentArtworks.forEach(art => {
+        const opt = document.createElement('option');
+        opt.value = art.title;
+        const count = (currentCertificates || []).filter(c => (c.title || '').trim().toLowerCase() === art.title.trim().toLowerCase()).length;
+        opt.textContent = `📁 ${art.title} (${count}/${art.totalLimit || 50} bản)`;
+        if (art.title === previousVal) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+
+      if (!select.value && currentArtworks.length > 0) {
+        select.value = currentArtworks[0].title;
+      }
+    }
+
+    function onArtworkFolderDropdownChanged(title) {
+      if (!title) return;
+      const art = currentArtworks.find(a => a.title.trim().toLowerCase() === title.trim().toLowerCase());
+      if (art) {
+        document.getElementById('inputTitle').value = art.title;
+        if (art.size) document.getElementById('inputSize').value = art.size;
+        if (art.releaseYear) document.getElementById('inputReleaseYear').value = art.releaseYear;
+        if (art.author) document.getElementById('inputAuthor').value = art.author;
+        if (art.totalLimit) document.getElementById('inputEditionTotal').value = art.totalLimit;
+        if (art.image) {
+          document.getElementById('imagePreview').src = art.image;
+          document.getElementById('uploadPromptText').style.display = 'none';
+        }
+      } else {
+        document.getElementById('inputTitle').value = title;
+      }
+      prepareNextCertificate();
+    }
+
+    function selectFolderAndCreate(title) {
+      switchTab('create');
+      const select = document.getElementById('selectArtworkFolder');
+      if (select) {
+        select.value = title;
+      }
+      onArtworkFolderDropdownChanged(title);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Modal: Tạo Thư Mục Mới
+    function openNewFolderModal() {
+      document.getElementById('folderInputTitle').value = '';
+      document.getElementById('folderInputTotal').value = '50';
+      document.getElementById('folderInputYear').value = new Date().getFullYear();
+      document.getElementById('folderInputSize').value = '50 x 70 cm';
+      document.getElementById('folderInputAuthor').value = 'Phạm Ngọc\n(Kột Nhà Decor)';
+      document.getElementById('folderImagePreview').src = '/assets/sample-artwork.jpg';
+      document.getElementById('folderImageFile').value = '';
+      document.getElementById('newFolderModal').classList.add('active');
+      setTimeout(() => {
+        document.getElementById('folderInputTitle').focus();
+      }, 100);
+    }
+
+    function closeNewFolderModal() {
+      document.getElementById('newFolderModal').classList.remove('active');
+    }
+
+    function handleFolderImageSelected(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('folderImagePreview').src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    async function handleCreateArtworkFolder(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitFolder');
+      const oldText = btn.innerHTML;
+      btn.innerHTML = '⏳ Đang tạo thư mục...';
+      btn.disabled = true;
+
+      try {
+        const title = document.getElementById('folderInputTitle').value.trim();
+        const total = document.getElementById('folderInputTotal').value.trim();
+        const size = document.getElementById('folderInputSize').value.trim();
+        const year = document.getElementById('folderInputYear').value.trim();
+        const author = document.getElementById('folderInputAuthor').value.trim();
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('totalLimit', total);
+        formData.append('size', size);
+        formData.append('releaseYear', year);
+        formData.append('author', author);
+
+        const imgFile = document.getElementById('folderImageFile');
+        if (imgFile.files && imgFile.files[0]) {
+          formData.append('artworkImage', imgFile.files[0]);
+        } else {
+          formData.append('existingImage', '/assets/sample-artwork.jpg');
+        }
+
+        const res = await fetch('/api/artworks', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          alert('Lỗi: ' + (errData.error || 'Không thể tạo thư mục'));
+          return;
+        }
+
+        const newArt = await res.json();
+        closeNewFolderModal();
+
+        await loadArtworkFolders();
+        await loadAllCertificates();
+
+        // Switch to the newly created artwork folder & start edition 01!
+        selectFolderAndCreate(newArt.title);
+
+        const banner = document.getElementById('autoNextBanner');
+        if (banner) {
+          banner.innerHTML = `🎉 <strong>Đã tạo thành công thư mục tranh "${newArt.title}"!</strong><br>Hệ thống đã tự động cài đặt sẵn <strong>Bản số 01 / ${newArt.totalLimit}</strong> (Mã: <strong>KND-${newArt.abbr}-${newArt.releaseYear}-001</strong>).<br>Bạn chỉ cần nhập tên khách hàng rồi bấm Lưu!`;
+          banner.style.display = 'block';
+        }
+
+      } catch (err) {
+        console.error('Error creating folder:', err);
+        alert('Lỗi kết nối máy chủ!');
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    async function deleteArtworkFolder(idOrTitle) {
+      if (!confirm(`Bạn có chắc muốn xóa thư mục tranh này?`)) return;
+      try {
+        const res = await fetch(`/api/artworks/${encodeURIComponent(idOrTitle)}`, { method: 'DELETE' });
+        if (res.ok) {
+          await loadArtworkFolders();
+          await loadAllCertificates();
+          alert('Đã xóa thư mục tranh.');
+        } else {
+          const data = await res.json();
+          alert('Lỗi: ' + (data.error || 'Không thể xóa'));
+        }
+      } catch (e) {
+        alert('Lỗi kết nối máy chủ');
+      }
+    }
+
     // Load Certificates
     async function loadAllCertificates() {
       try {
@@ -594,7 +872,7 @@
         if (res.ok) {
           currentCertificates = await res.json();
           renderCertificatesList(currentCertificates);
-          document.getElementById('certCount').textContent = currentCertificates.length;
+          updateArtworkFolderDropdown();
         }
       } catch (err) {
         console.error('Error loading certs:', err);
@@ -603,23 +881,39 @@
 
     function renderCertificatesList(certs) {
       const container = document.getElementById('certificatesList');
-      if (!certs || certs.length === 0) {
-        container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 20px;">Chưa có chứng nhận nào được tạo.</div>`;
-        document.getElementById('certCount').textContent = '0';
-        return;
-      }
-
-      // Group certificates by artwork title
       const groups = {};
-      certs.forEach(c => {
+
+      // 1. Populate groups with registered artwork folders first
+      (currentArtworks || []).forEach(art => {
+        const titleKey = (art.title || '').trim();
+        if (titleKey && !groups[titleKey]) {
+          groups[titleKey] = {
+            id: art.id,
+            title: titleKey,
+            abbr: art.abbr || getTitleAbbreviation(titleKey),
+            image: art.image || '/assets/sample-artwork.jpg',
+            size: art.size || '50 x 70 cm',
+            author: art.author || 'Phạm Ngọc\n(Kột Nhà Decor)',
+            releaseYear: art.releaseYear || '2026',
+            totalLimit: art.totalLimit || 50,
+            items: []
+          };
+        }
+      });
+
+      // 2. Put certificates into their matching groups
+      (certs || []).forEach(c => {
         const titleKey = (c.title || 'Không tên').trim();
         if (!groups[titleKey]) {
           groups[titleKey] = {
+            id: removeVietnameseTones(titleKey).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             title: titleKey,
+            abbr: getTitleAbbreviation(titleKey),
             image: c.image || '/assets/sample-artwork.jpg',
-            size: c.size || '',
-            author: c.author || '',
-            releaseYear: c.releaseYear || '',
+            size: c.size || '50 x 70 cm',
+            author: c.author || 'Phạm Ngọc\n(Kột Nhà Decor)',
+            releaseYear: c.releaseYear || '2026',
+            totalLimit: parseInt((c.edition || '').split('/')[1] || '50', 10) || 50,
             items: []
           };
         }
@@ -627,10 +921,18 @@
       });
 
       const groupKeys = Object.keys(groups);
-      document.getElementById('certCount').textContent = `${groupKeys.length} bộ (${certs.length} bản)`;
+      if (groupKeys.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 25px 20px;">Chưa có thư mục hoặc tranh nào được tạo.<br><button class="btn-primary" style="background: #ea580c; border-color: #ea580c; margin-top: 10px; padding: 8px 16px; font-size: 13px;" onclick="openNewFolderModal()">📁 + Tạo Thư Mục Đầu Tiên</button></div>`;
+        document.getElementById('certCount').textContent = '0';
+        return;
+      }
+
+      document.getElementById('certCount').textContent = `${groupKeys.length} thư mục (${(certs || []).length} bản)`;
 
       container.innerHTML = groupKeys.map((key, gIdx) => {
         const group = groups[key];
+        const folderId = `folder_${gIdx}`;
+
         // Sort items inside group by edition serial
         group.items.sort((a, b) => {
           const numA = parseInt((a.edition || '').split('/')[0] || '0', 10);
@@ -638,10 +940,47 @@
           return numA - numB;
         });
 
-        // Count claimed owners
+        // Case 1: Folder has NO certificates created yet
+        if (group.items.length === 0) {
+          return `
+            <div class="artwork-folder-card" style="border-color: #fed7aa;">
+              <div class="folder-header" style="background: #fffbeb;">
+                <img src="${group.image}" class="folder-thumb" alt="${group.title}">
+                <div class="folder-info">
+                  <div class="folder-title-row">
+                    <span style="font-size: 18px;">📁</span>
+                    <span class="folder-title">${group.title}</span>
+                    <span class="folder-badge-count" style="background: #fef3c7; color: #b45309;">Mới tạo &bull; Giới hạn ${group.totalLimit} bản</span>
+                  </div>
+                  <div class="folder-meta">
+                    ${group.size ? `${group.size} &bull; ` : ''}Năm: ${group.releaseYear || '2026'} &bull; ${group.author ? group.author.replace(/\n/g, ' ') : ''}
+                  </div>
+                  <div class="folder-stats">
+                    <span style="color: #ea580c; font-weight: 600;">✨ Thư mục mới &bull; Chưa xuất bản in nào</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="folder-actions-bar" style="background: #fff7ed;">
+                <div style="font-size: 12.5px; color: #713f12;">
+                  Mã dự kiến: <strong>KND-${group.abbr}-${group.releaseYear || '2026'}-001</strong> (Bản 01 / ${group.totalLimit})
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button type="button" class="btn-primary" onclick="selectFolderAndCreate('${group.title.replace(/'/g, "\\'")}')" style="background: #ea580c; border-color: #ea580c; padding: 6px 14px; font-size: 13px;">
+                    ➕ Bắt đầu tạo bản 01
+                  </button>
+                  <button type="button" class="btn-secondary-sm" onclick="deleteArtworkFolder('${group.id || group.title}')" style="color: #dc2626; border-color: #fca5a5;" title="Xóa thư mục">
+                    🗑️ Xóa
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        // Case 2: Folder has certificates created
         const claimed = group.items.filter(c => c.owner && c.owner !== 'Chưa kích hoạt' && c.owner.trim() !== '');
         const unclaimedCount = group.items.length - claimed.length;
-        const folderId = `folder_${gIdx}`;
 
         return `
           <div class="artwork-folder-card">
@@ -652,7 +991,7 @@
                 <div class="folder-title-row">
                   <span style="font-size: 18px;">📁</span>
                   <span class="folder-title">${group.title}</span>
-                  <span class="folder-badge-count">Trọn bộ ${group.items.length} bản</span>
+                  <span class="folder-badge-count">Đã cấp ${group.items.length} / ${group.totalLimit} bản</span>
                 </div>
                 <div class="folder-meta">
                   ${group.size ? `${group.size} &bull; ` : ''}Năm: ${group.releaseYear || '2026'} &bull; ${group.author ? group.author.replace(/\n/g, ' ') : ''}
@@ -668,7 +1007,7 @@
               </div>
               <div>
                 <button type="button" class="folder-toggle-btn" id="btnToggle_${folderId}">
-                  <span>📂 Mở ${group.items.length} bản</span>
+                  <span>📂 Xem ${group.items.length} bản</span>
                   <span id="arrow_${folderId}">▼</span>
                 </button>
               </div>
@@ -680,7 +1019,7 @@
                 Mã tranh: <strong>${group.items[0]?.certCode?.split('-').slice(0, 3).join('-') || 'KND'}</strong> (từ bản 01 đến ${String(group.items.length).padStart(2, '0')})
               </div>
               <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn-secondary-sm" onclick="prepareNextCertificate()" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
+                <button type="button" class="btn-secondary-sm" onclick="selectFolderAndCreate('${group.title.replace(/'/g, "\\'")}')" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
                   ➕ Tạo bản tiếp theo
                 </button>
               </div>
@@ -832,6 +1171,12 @@
       const title = document.getElementById('inputTitle').value.trim();
       if (!title) return;
 
+      const select = document.getElementById('selectArtworkFolder');
+      if (select && select.value !== title) {
+        const optionExists = Array.from(select.options).some(o => o.value === title);
+        if (optionExists) select.value = title;
+      }
+
       const highestSerial = getHighestSerialForTitle(title);
       const nextSerial = highestSerial + 1;
 
@@ -967,6 +1312,7 @@
         }
 
         const savedCert = await res.json();
+        await loadArtworkFolders();
         await loadAllCertificates();
 
         // Show QR Modal immediately
@@ -1015,6 +1361,13 @@
       // Title
       const titleInput = document.getElementById('inputTitle');
       const title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : 'Long Tranh Hổ Đấu';
+
+      // Ensure selectArtworkFolder matches title if possible
+      const select = document.getElementById('selectArtworkFolder');
+      if (select && select.value !== title) {
+        const optionExists = Array.from(select.options).some(o => o.value === title);
+        if (optionExists) select.value = title;
+      }
 
       // Scan all certificates to find the HIGHEST serial number for this artwork title
       const highestSerial = getHighestSerialForTitle(title);
@@ -1110,6 +1463,13 @@
 
       document.getElementById('editModeId').value = cert.certCode;
       document.getElementById('inputTitle').value = cert.title || '';
+
+      const select = document.getElementById('selectArtworkFolder');
+      if (select && cert.title) {
+        const optionExists = Array.from(select.options).some(o => o.value === cert.title);
+        if (optionExists) select.value = cert.title;
+      }
+
       document.getElementById('inputCertCode').value = cert.certCode || '';
       document.getElementById('inputSize').value = cert.size || '';
       document.getElementById('inputReleaseYear').value = cert.releaseYear || '';

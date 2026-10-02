@@ -12,6 +12,7 @@ let currentPublicUrl = '';
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'certificates.json');
+const ARTWORKS_FILE = path.join(__dirname, 'data', 'artworks.json');
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -66,6 +67,33 @@ function saveCertificates(certs) {
   }
 }
 
+// Helper: Read artworks / folders
+function getArtworks() {
+  try {
+    if (!fs.existsSync(ARTWORKS_FILE)) {
+      return [];
+    }
+    const data = fs.readFileSync(ARTWORKS_FILE, 'utf8');
+    return JSON.parse(data || '[]');
+  } catch (err) {
+    console.error('Error reading artworks:', err);
+    return [];
+  }
+}
+
+// Helper: Save artworks / folders
+function saveArtworks(artworks) {
+  try {
+    const dir = path.dirname(ARTWORKS_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(ARTWORKS_FILE, JSON.stringify(artworks, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Error saving artworks:', err);
+  }
+}
+
 // Helper: Get primary local IPv4
 function getLocalIp() {
   const interfaces = os.networkInterfaces();
@@ -98,6 +126,98 @@ app.get('/api/info', (req, res) => {
     lanUrl: `http://${localIp}:${PORT}`,
     publicUrl: publicTunnel
   });
+});
+
+// API: Get all artwork folders / collections
+app.get('/api/artworks', (req, res) => {
+  const artworks = getArtworks();
+  const certs = getCertificates();
+  let changed = false;
+
+  // Auto-sync any artwork titles from existing certificates
+  certs.forEach(c => {
+    if (c.title && !artworks.some(a => a.title.trim().toLowerCase() === c.title.trim().toLowerCase())) {
+      const title = c.title.trim();
+      artworks.push({
+        id: removeVietnameseTones(title).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        title: title,
+        abbr: getTitleAbbreviation(title),
+        totalLimit: parseInt((c.edition || '').split('/')[1] || '50', 10) || 50,
+        size: c.size || '50 x 70 cm',
+        releaseYear: c.releaseYear || '2026',
+        author: c.author || 'Phạm Ngọc\n(Kột Nhà Decor)',
+        image: c.image || '/assets/sample-artwork.jpg',
+        createdAt: c.createdAt || new Date().toISOString()
+      });
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    saveArtworks(artworks);
+  }
+
+  res.json(artworks);
+});
+
+// API: Create a new artwork folder / collection
+app.post('/api/artworks', upload.fields([
+  { name: 'artworkImage', maxCount: 1 }
+]), (req, res) => {
+  try {
+    const artworks = getArtworks();
+    const body = req.body;
+    const title = (body.title || '').trim();
+
+    if (!title) {
+      return res.status(400).json({ error: 'Tên tác phẩm không được để trống' });
+    }
+
+    if (artworks.some(a => a.title.trim().toLowerCase() === title.toLowerCase())) {
+      return res.status(400).json({ error: `Thư mục tranh "${title}" đã tồn tại!` });
+    }
+
+    let artworkImagePath = body.existingImage || '/assets/sample-artwork.jpg';
+    if (req.files && req.files['artworkImage'] && req.files['artworkImage'][0]) {
+      artworkImagePath = '/uploads/' + req.files['artworkImage'][0].filename;
+    }
+
+    const newArtwork = {
+      id: removeVietnameseTones(title).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      title: title,
+      abbr: getTitleAbbreviation(title),
+      totalLimit: parseInt(body.totalLimit, 10) || 50,
+      size: (body.size || '50 x 70 cm').trim(),
+      releaseYear: (body.releaseYear || new Date().getFullYear()).toString().trim(),
+      author: (body.author || 'Phạm Ngọc\n(Kột Nhà Decor)').trim(),
+      image: artworkImagePath,
+      createdAt: new Date().toISOString()
+    };
+
+    artworks.unshift(newArtwork);
+    saveArtworks(artworks);
+    res.status(201).json(newArtwork);
+  } catch (err) {
+    console.error('Error creating artwork folder:', err);
+    res.status(500).json({ error: 'Lỗi tạo thư mục: ' + err.message });
+  }
+});
+
+// API: Delete an artwork folder
+app.delete('/api/artworks/:id', (req, res) => {
+  try {
+    let artworks = getArtworks();
+    const id = req.params.id;
+    const initialLen = artworks.length;
+    artworks = artworks.filter(a => a.id !== id && a.title.toLowerCase() !== id.toLowerCase());
+    if (artworks.length === initialLen) {
+      return res.status(404).json({ error: 'Không tìm thấy thư mục' });
+    }
+    saveArtworks(artworks);
+    res.json({ success: true, message: 'Đã xóa thư mục tranh' });
+  } catch (err) {
+    res.status(500).json({ error: 'Lỗi xóa thư mục: ' + err.message });
+  }
 });
 
 // API: Get all certificates
