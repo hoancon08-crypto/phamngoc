@@ -289,12 +289,51 @@
       border: 1px solid #fdba74;
     }
 
-    .subfolder-actions {
+    .subfolder-top {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .subfolder-top:hover {
+      opacity: 0.95;
+    }
+
+    .subfolder-actions {
+      display: none;
       gap: 8px;
       flex-wrap: wrap;
-      padding-top: 9px;
-      border-top: 1px dashed #e2e8f0;
+      padding-top: 10px;
+      margin-top: 10px;
+      border-top: 1px dashed #cbd5e1;
+    }
+
+    .subfolder-actions.expanded {
+      display: flex;
+    }
+
+    .btn-subfolder-toggle {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-subfolder-toggle:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
     }
 
     .btn-subfolder {
@@ -1226,6 +1265,9 @@
                   oninput="filterFolderItems('${folderId}', this.value)">
                 
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn-secondary-sm" onclick="toggleAllSubfolders('${folderId}')" id="btnToggleAll_${folderId}" style="padding: 7px 12px; font-size: 12.5px; font-weight: 700;" title="Mở rộng hoặc thu gọn tất cả thư mục con">
+                    <span>🔽 Mở rộng tất cả</span>
+                  </button>
                   <button type="button" class="btn-primary" style="background: #15803d; border-color: #15803d; padding: 7px 14px; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;" onclick="openNewSubfolderModal('${group.title.replace(/'/g, "\\'")}', ${group.items.length + 1}, ${group.totalLimit})">
                     📁 ➕ Tạo Thư Mục Con (Bản ${String(group.items.length + 1).padStart(2, '0')})
                   </button>
@@ -1234,12 +1276,14 @@
               </div>
 
               <div id="itemsContainer_${folderId}" style="max-height: 520px; overflow-y: auto; padding-right: 4px;">
-                ${group.items.map(c => `
-                  <div class="subfolder-box item-row" data-search="${c.edition} ${c.certCode} ${c.owner || ''}">
-                    <!-- Dòng tiêu đề thư mục con -->
-                    <div class="subfolder-top">
+                ${group.items.map((c, cIdx) => {
+                  const subId = `sub_${gIdx}_${cIdx}`;
+                  return `
+                  <div class="subfolder-box item-row" data-search="${c.edition} ${c.certCode} ${c.owner || ''}" id="subBox_${subId}">
+                    <!-- Dòng tiêu đề thư mục con (Bấm vào để thu gọn / mở ra) -->
+                    <div class="subfolder-top" onclick="toggleSubfolder('${subId}')" title="Bấm để thu gọn hoặc mở ra các nút thao tác">
                       <div class="subfolder-name-wrap">
-                        <span class="subfolder-icon">📂</span>
+                        <span class="subfolder-icon" id="subIcon_${subId}">📁</span>
                         <div>
                           <div class="subfolder-title">
                             Thư mục con: <strong>Bản ${c.edition}</strong>
@@ -1250,13 +1294,19 @@
                         </div>
                       </div>
                       
-                      <div class="subfolder-owner-badge ${c.owner && c.owner !== 'Chưa kích hoạt' ? 'has-owner' : 'no-owner'}">
-                        ${c.owner && c.owner !== 'Chưa kích hoạt' ? `👤 Khách: <strong>${c.owner}</strong>` : '⚪ Chưa có tên khách'}
+                      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <div class="subfolder-owner-badge ${c.owner && c.owner !== 'Chưa kích hoạt' ? 'has-owner' : 'no-owner'}">
+                          ${c.owner && c.owner !== 'Chưa kích hoạt' ? `👤 Khách: <strong>${c.owner}</strong>` : '⚪ Chưa có tên khách'}
+                        </div>
+                        <button type="button" class="btn-subfolder-toggle" onclick="event.stopPropagation(); toggleSubfolder('${subId}')" title="Bấm để mở ra hoặc thu gọn">
+                          <span class="sub-label" id="subLabel_${subId}">Mở ra</span>
+                          <span class="sub-arrow" id="subArrow_${subId}">▼</span>
+                        </button>
                       </div>
                     </div>
 
-                    <!-- Các nút chức năng của thư mục con -->
-                    <div class="subfolder-actions">
+                    <!-- Các nút chức năng của thư mục con (Ẩn mặc định, bấm mở ra) -->
+                    <div class="subfolder-actions" id="subActions_${subId}">
                       <button type="button" class="btn-subfolder btn-owner" onclick="event.stopPropagation(); openQuickEditOwner('${c.certCode}', '${c.edition}', '${c.owner || ''}', '${group.title}')" title="Cập nhật tên khách hàng sở hữu">
                         👤 Sửa Tên Khách
                       </button>
@@ -1271,7 +1321,7 @@
                       </a>
                     </div>
                   </div>
-                `).join('')}
+                `;}).join('')}
               </div>
             </div>
           </div>
@@ -1380,6 +1430,69 @@
         folderBody.classList.add('expanded');
         if (arrow) arrow.textContent = '▲';
         if (btn) btn.style.background = '#e2e8f0';
+      }
+    }
+
+    function toggleSubfolder(subId) {
+      const actions = document.getElementById('subActions_' + subId);
+      const arrow = document.getElementById('subArrow_' + subId);
+      const label = document.getElementById('subLabel_' + subId);
+      const icon = document.getElementById('subIcon_' + subId);
+      if (!actions) return;
+
+      const isExpanded = actions.classList.contains('expanded');
+      if (isExpanded) {
+        actions.classList.remove('expanded');
+        if (arrow) arrow.textContent = '▼';
+        if (label) label.textContent = 'Mở ra';
+        if (icon) icon.textContent = '📁';
+      } else {
+        actions.classList.add('expanded');
+        if (arrow) arrow.textContent = '▲';
+        if (label) label.textContent = 'Thu gọn';
+        if (icon) icon.textContent = '📂';
+      }
+    }
+
+    function toggleAllSubfolders(folderId) {
+      const container = document.getElementById('itemsContainer_' + folderId);
+      if (!container) return;
+      const allActionBoxes = container.querySelectorAll('.subfolder-actions');
+      const allBtns = container.querySelectorAll('.btn-subfolder-toggle');
+      const allIcons = container.querySelectorAll('.subfolder-icon');
+      const toggleAllBtn = document.getElementById('btnToggleAll_' + folderId);
+
+      // Check if any is collapsed
+      const hasCollapsed = Array.from(allActionBoxes).some(el => !el.classList.contains('expanded'));
+
+      allActionBoxes.forEach(el => {
+        if (hasCollapsed) {
+          el.classList.add('expanded');
+        } else {
+          el.classList.remove('expanded');
+        }
+      });
+
+      allBtns.forEach(btn => {
+        const label = btn.querySelector('.sub-label');
+        const arrow = btn.querySelector('.sub-arrow');
+        if (hasCollapsed) {
+          if (label) label.textContent = 'Thu gọn';
+          if (arrow) arrow.textContent = '▲';
+        } else {
+          if (label) label.textContent = 'Mở ra';
+          if (arrow) arrow.textContent = '▼';
+        }
+      });
+
+      allIcons.forEach(icon => {
+        icon.textContent = hasCollapsed ? '📂' : '📁';
+      });
+
+      if (toggleAllBtn) {
+        toggleAllBtn.innerHTML = hasCollapsed 
+          ? '<span>🔼 Thu gọn tất cả</span>' 
+          : '<span>🔽 Mở rộng tất cả</span>';
       }
     }
 
