@@ -147,29 +147,38 @@
             </select>
           </div>
 
-          <!-- Phiên bản (Số thứ tự in / Tổng số lượng giới hạn) -->
+          <!-- Phiên bản (Tự động tính số thứ tự tranh) -->
           <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label class="form-label" style="margin-bottom: 0;">Phiên bản:</label>
-              <span id="editionDisplayPreview" style="font-weight: 700; color: #15803d; font-size: 14.5px; background: #dcfce7; padding: 2px 10px; border-radius: 999px;">07 / 50</span>
-            </div>
-            
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="flex: 1;">
-                <label style="font-size: 12px; color: #4b5563; font-weight: 600; display: block; margin-bottom: 3px;">Số thứ tự in:</label>
-                <input type="number" id="inputEditionCurrent" class="form-input" min="1" value="7" style="text-align: center; font-weight: 700; font-size: 16px;" oninput="updateEditionCombined()">
+            <label class="form-label">Phiên bản tác phẩm:</label>
+            <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #166534; font-weight: 700;">Hệ thống tự động chọn:</div>
+                  <div id="editionAutoBadge" style="font-size: 22px; font-weight: 800; color: #15803d; margin-top: 2px;">
+                    07 / 50
+                  </div>
+                  <div style="font-size: 12px; color: #166534; font-weight: 500; margin-top: 2px;" id="editionExplainText">
+                    (Bức số 7 trên tổng số 50 bản giới hạn)
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <label for="inputEditionTotal" style="font-size: 11.5px; color: #374151; display: block; font-weight: 600; margin-bottom: 3px;">Số giới hạn (XX):</label>
+                  <input type="number" id="inputEditionTotal" class="form-input" min="1" value="50" style="width: 80px; padding: 7px 10px; text-align: center; font-weight: 700; font-size: 16px;" oninput="onTotalLimitChanged()">
+                </div>
               </div>
-              <span style="font-size: 22px; font-weight: bold; color: #9ca3af; margin-top: 18px;">/</span>
-              <div style="flex: 1;">
-                <label style="font-size: 12px; color: #4b5563; font-weight: 600; display: block; margin-bottom: 3px;">Tổng giới hạn:</label>
-                <input type="number" id="inputEditionTotal" class="form-input" min="1" value="50" style="text-align: center; font-weight: 700; font-size: 16px;" oninput="updateEditionCombined()">
+
+              <!-- Tùy chỉnh nhanh nếu muốn đổi số thứ tự -->
+              <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed #bbf7d0; display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 12px; color: #475569;">Số thứ tự tranh hiện tại:</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <button type="button" class="btn-secondary-sm" style="padding: 4px 10px; font-weight: bold;" onclick="changeOrderNum(-1)">◀</button>
+                  <input type="number" id="inputEditionCurrent" min="1" value="7" style="width: 55px; text-align: center; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px; font-size: 14px;" oninput="onCurrentOrderChanged()">
+                  <button type="button" class="btn-secondary-sm" style="padding: 4px 10px; font-weight: bold;" onclick="changeOrderNum(1)">▶</button>
+                </div>
               </div>
-              <button type="button" class="btn-secondary-sm" style="margin-top: 18px; padding: 11px 12px; height: 42px;" onclick="incrementEditionNext()" title="Tự động tăng lên 1 bản tiếp theo">
-                ⏩ +1 Bản
-              </button>
             </div>
             <input type="hidden" id="inputEdition" value="07 / 50">
-            <div class="tag-help">Số trước dấu "/" là thứ tự tranh đã in QR, số sau là tổng số lượng giới hạn bạn mặc định</div>
+            <div class="tag-help">Khách quét mã sẽ thấy rõ tranh này đang ở số thứ tự bao nhiêu trên tổng số lượng giới hạn</div>
           </div>
 
           <!-- Mã chứng nhận -->
@@ -201,24 +210,14 @@
           </div>
 
           <!-- Submit Buttons inside card -->
-          <div style="margin-top: 24px; padding-bottom: 50px;">
-            <button type="submit" id="btnSubmitForm" class="btn-primary" style="font-size: 17px; padding: 16px;">
+          <div style="margin-top: 24px;">
+            <button type="submit" id="btnSubmitForm" class="btn-primary" style="font-size: 17px; padding: 15px;">
               💾 Lưu & Tạo Mã QR Quét
             </button>
             <button type="button" class="btn-outline" onclick="previewCurrentForm()">
               👁️ Xem Thử Giao Diện Khách Xem
             </button>
           </div>
-        </div>
-
-        <!-- Sticky Floating Bottom Action Bar for Easy Mobile Tapping -->
-        <div class="floating-bottom-bar">
-          <button type="button" class="btn-bar-preview" onclick="previewCurrentForm()">
-            👁️ Xem trước
-          </button>
-          <button type="submit" class="btn-bar-submit">
-            💾 Lưu & Tạo mã QR
-          </button>
         </div>
       </form>
     </div>
@@ -488,7 +487,10 @@
       const combined = `${currentFormatted} / ${totalVal}`;
 
       document.getElementById('inputEdition').value = combined;
-      document.getElementById('editionDisplayPreview').textContent = combined;
+      const badge = document.getElementById('editionAutoBadge');
+      if (badge) badge.textContent = combined;
+      const explain = document.getElementById('editionExplainText');
+      if (explain) explain.textContent = `(Bức số ${currentVal} trên tổng số ${totalVal} bản giới hạn)`;
 
       // Automatically update serial suffix in certificate code
       const codeInput = document.getElementById('inputCertCode');
@@ -503,10 +505,19 @@
       localStorage.setItem('default_edition_total', totalVal);
     }
 
-    function incrementEditionNext() {
+    function onTotalLimitChanged() {
+      updateEditionCombined();
+    }
+
+    function onCurrentOrderChanged() {
+      updateEditionCombined();
+    }
+
+    function changeOrderNum(delta) {
       const currentInput = document.getElementById('inputEditionCurrent');
-      const nextVal = (parseInt(currentInput.value, 10) || 0) + 1;
-      currentInput.value = nextVal;
+      const cur = parseInt(currentInput.value, 10) || 1;
+      const next = Math.max(1, cur + delta);
+      currentInput.value = next;
       updateEditionCombined();
     }
 
@@ -606,13 +617,11 @@
 
       // Parse edition into current serial and total
       if (cert.edition) {
-        document.getElementById('inputEdition').value = cert.edition;
-        document.getElementById('editionDisplayPreview').textContent = cert.edition;
-        const parts = cert.edition.split('/');
         if (parts.length === 2) {
           document.getElementById('inputEditionCurrent').value = parseInt(parts[0].trim(), 10) || 1;
           document.getElementById('inputEditionTotal').value = parseInt(parts[1].trim(), 10) || 50;
         }
+        updateEditionCombined();
       }
 
       if (cert.image) {

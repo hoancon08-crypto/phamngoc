@@ -178,7 +178,10 @@
       </div>
       <div class="cert-table-row">
         <div class="cert-field-label">Phiên bản</div>
-        <div id="valEdition" class="cert-field-value">07 / 50</div>
+        <div class="cert-field-value">
+          <span id="valEdition">07 / 50</span>
+          <div id="valEditionDetail" style="font-size: 12px; font-weight: 500; color: #64748b; margin-top: 2px;">(Bản số 07 trên tổng 50 bản giới hạn)</div>
+        </div>
       </div>
       <div class="cert-table-row">
         <div class="cert-field-label">Mã chứng nhận:</div>
@@ -264,7 +267,21 @@
       document.title = `${cert.title || 'Tác phẩm'} - Xác thực chứng nhận`;
 
       if (cert.title) document.getElementById('valTitle').textContent = cert.title;
-      if (cert.edition) document.getElementById('valEdition').textContent = cert.edition;
+      if (cert.edition) {
+        document.getElementById('valEdition').textContent = cert.edition;
+        const parts = cert.edition.split('/');
+        const detailEl = document.getElementById('valEditionDetail');
+        if (detailEl) {
+          if (parts.length === 2) {
+            const cur = parts[0].trim();
+            const tot = parts[1].trim();
+            detailEl.textContent = `(Bản số ${cur} trên tổng số ${tot} bản giới hạn phát hành)`;
+            detailEl.style.display = 'block';
+          } else {
+            detailEl.style.display = 'none';
+          }
+        }
+      }
       if (cert.certCode) document.getElementById('valCertCode').textContent = cert.certCode;
       if (cert.size) document.getElementById('valSize').textContent = cert.size;
       if (cert.releaseYear) document.getElementById('valReleaseYear').textContent = cert.releaseYear;
