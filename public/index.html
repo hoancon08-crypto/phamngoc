@@ -63,6 +63,142 @@
       font-weight: 600;
       cursor: pointer;
     }
+
+    /* Artwork Folder Parent Card */
+    .artwork-folder-card {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.2s;
+    }
+
+    .artwork-folder-card:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    .folder-header {
+      padding: 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .folder-thumb {
+      width: 65px;
+      height: 65px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #cbd5e1;
+      flex-shrink: 0;
+    }
+
+    .folder-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .folder-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .folder-title {
+      font-size: 16.5px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .folder-badge-count {
+      background: #ffedd5;
+      color: #c2410c;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .folder-meta {
+      font-size: 12.5px;
+      color: #64748b;
+      margin-top: 3px;
+    }
+
+    .folder-stats {
+      font-size: 12px;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .folder-toggle-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .folder-toggle-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .folder-actions-bar {
+      padding: 10px 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .folder-body {
+      display: none;
+      padding: 14px 16px;
+      background: #ffffff;
+    }
+
+    .folder-body.expanded {
+      display: block;
+    }
+
+    .sub-edition-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 12px;
+      border: 1px solid #f1f5f9;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: #ffffff;
+      transition: background 0.15s;
+    }
+
+    .sub-edition-item:hover {
+      background: #f8fafc;
+      border-color: #e2e8f0;
+    }
   </style>
 </head>
 <body>
@@ -86,7 +222,7 @@
           ✏️ Nhập thông tin
         </button>
         <button id="tabBtnList" class="nav-tab-btn" onclick="switchTab('list')">
-          📋 Danh sách tranh (<span id="certCount">0</span>)
+          📁 Thư mục tranh (<span id="certCount">0</span>)
         </button>
         <a href="/batch-print" target="_blank" class="nav-tab-btn" style="text-decoration: none; color: #ea580c; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
           🖨️ In 50 Mã QR (Hàng loạt)
@@ -440,37 +576,158 @@
       const container = document.getElementById('certificatesList');
       if (!certs || certs.length === 0) {
         container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 20px;">Chưa có chứng nhận nào được tạo.</div>`;
+        document.getElementById('certCount').textContent = '0';
         return;
       }
 
-      container.innerHTML = certs.map(c => `
-        <div class="cert-list-item">
-          <img src="${c.image || '/assets/sample-artwork.jpg'}" class="cert-item-thumb" alt="${c.title}">
-          <div class="cert-item-info">
-            <div class="cert-item-title">${c.title || 'Không tên'}</div>
-            <div class="cert-item-code">Mã: <strong>${c.certCode}</strong> | Phiên bản: <strong>${c.edition || '01 / 50'}</strong></div>
-            <div style="font-size: 12.5px; color: #166534; font-weight: 600; margin-top: 3px;">
-              👤 Khách sở hữu: <span style="color: #0f172a;">${c.owner ? c.owner : '<em style="color:#94a3b8; font-weight: normal;">Chưa cập nhật</em>'}</span>
+      // Group certificates by artwork title
+      const groups = {};
+      certs.forEach(c => {
+        const titleKey = (c.title || 'Không tên').trim();
+        if (!groups[titleKey]) {
+          groups[titleKey] = {
+            title: titleKey,
+            image: c.image || '/assets/sample-artwork.jpg',
+            size: c.size || '',
+            author: c.author || '',
+            releaseYear: c.releaseYear || '',
+            items: []
+          };
+        }
+        groups[titleKey].items.push(c);
+      });
+
+      const groupKeys = Object.keys(groups);
+      document.getElementById('certCount').textContent = `${groupKeys.length} bộ (${certs.length} bản)`;
+
+      container.innerHTML = groupKeys.map((key, gIdx) => {
+        const group = groups[key];
+        // Sort items inside group by edition serial
+        group.items.sort((a, b) => {
+          const numA = parseInt((a.edition || '').split('/')[0] || '0', 10);
+          const numB = parseInt((b.edition || '').split('/')[0] || '0', 10);
+          return numA - numB;
+        });
+
+        // Count claimed owners
+        const claimed = group.items.filter(c => c.owner && c.owner !== 'Chưa kích hoạt' && c.owner.trim() !== '');
+        const unclaimedCount = group.items.length - claimed.length;
+        const folderId = `folder_${gIdx}`;
+
+        return `
+          <div class="artwork-folder-card">
+            <!-- Thư mục Mẹ (Header) -->
+            <div class="folder-header" onclick="toggleFolder('${folderId}')">
+              <img src="${group.image}" class="folder-thumb" alt="${group.title}">
+              <div class="folder-info">
+                <div class="folder-title-row">
+                  <span style="font-size: 18px;">📁</span>
+                  <span class="folder-title">${group.title}</span>
+                  <span class="folder-badge-count">Trọn bộ ${group.items.length} bản</span>
+                </div>
+                <div class="folder-meta">
+                  ${group.size ? `${group.size} &bull; ` : ''}Năm: ${group.releaseYear || '2026'} &bull; ${group.author ? group.author.replace(/\n/g, ' ') : ''}
+                </div>
+                <div class="folder-stats">
+                  <span style="color: #15803d; font-weight: 600;">
+                    🟢 ${claimed.length} bản đã có khách (${claimed.map(c => `Bản ${c.edition}: ${c.owner}`).join(', ') || 'Chưa có'})
+                  </span>
+                  <span style="color: #64748b;">
+                    ⚪ ${unclaimedCount} bản sẵn sàng
+                  </span>
+                </div>
+              </div>
+              <div>
+                <button type="button" class="folder-toggle-btn" id="btnToggle_${folderId}">
+                  <span>📂 Mở ${group.items.length} bản</span>
+                  <span id="arrow_${folderId}">▼</span>
+                </button>
+              </div>
             </div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${c.size || ''} &bull; Năm: ${c.releaseYear || ''}</div>
-            <span class="cert-item-status">${c.verificationStatusText || 'ĐÃ XÁC THỰC'}</span>
+
+            <!-- Thanh chức năng nhanh của Thư mục mẹ -->
+            <div class="folder-actions-bar">
+              <div style="font-size: 12.5px; color: #475569;">
+                Mã tranh: <strong>${group.items[0]?.certCode?.split('-').slice(0, 3).join('-') || 'KND'}</strong> (từ bản 01 đến ${String(group.items.length).padStart(2, '0')})
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <a href="/batch-print" target="_blank" class="btn-secondary-sm" style="text-decoration: none; color: #ea580c; font-weight: 700; border-color: #fdba74; background: #fff7ed; padding: 6px 12px;">
+                  🖨️ In Trọn Bộ ${group.items.length} Tem Decal
+                </a>
+              </div>
+            </div>
+
+            <!-- Danh sách con 50 bản (Thu gọn/Mở rộng) -->
+            <div id="${folderId}" class="folder-body">
+              <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <input type="text" placeholder="🔍 Tìm kiếm bản số (VD: 07) hoặc tên khách..." 
+                  style="width: 100%; max-width: 380px; padding: 7px 12px; font-size: 13px; border: 1.5px solid #cbd5e1; border-radius: 8px;"
+                  oninput="filterFolderItems('${folderId}', this.value)">
+                <span style="font-size: 12px; color: #64748b; white-space: nowrap;">Tổng ${group.items.length} bản</span>
+              </div>
+
+              <div id="itemsContainer_${folderId}" style="max-height: 460px; overflow-y: auto; padding-right: 4px;">
+                ${group.items.map(c => `
+                  <div class="sub-edition-item item-row" data-search="${c.edition} ${c.certCode} ${c.owner || ''}">
+                    <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                      <span style="font-size: 13px; font-weight: 800; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 3px 8px; border-radius: 6px; white-space: nowrap;">
+                        Bản ${c.edition}
+                      </span>
+                      <div style="min-width: 0;">
+                        <div style="font-size: 12px; font-weight: 700; color: #334155;">${c.certCode}</div>
+                        <div style="font-size: 12px; color: ${c.owner && c.owner !== 'Chưa kích hoạt' ? '#166534; font-weight: 600;' : '#94a3b8;'}">
+                          👤 ${c.owner && c.owner !== 'Chưa kích hoạt' ? `Khách: <strong>${c.owner}</strong>` : 'Chưa kích hoạt'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                      <button class="btn-icon-action btn-qr" onclick="event.stopPropagation(); showQrModalForCert('${c.certCode}')" title="Xem mã QR">
+                        📲 QR
+                      </button>
+                      <button class="btn-icon-action" onclick="event.stopPropagation(); loadCertToEdit('${c.certCode}')" title="Chỉnh sửa thông tin / chủ sở hữu">
+                        ✏️ Sửa
+                      </button>
+                      <a href="/verify/${encodeURIComponent(c.certCode)}" target="_blank" class="btn-icon-action" onclick="event.stopPropagation()" title="Xem trang khách hàng">
+                        👁️
+                      </a>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
           </div>
-          <div class="cert-item-actions">
-            <button class="btn-icon-action btn-qr" onclick="showQrModalForCert('${c.certCode}')">
-              📲 Mã QR
-            </button>
-            <button class="btn-icon-action" onclick="loadCertToEdit('${c.certCode}')">
-              ✏️ Sửa
-            </button>
-            <a href="/verify/${encodeURIComponent(c.certCode)}" target="_blank" class="btn-icon-action">
-              👁️ Xem
-            </a>
-            <button class="btn-danger-sm" onclick="deleteCert('${c.certCode}')">
-              🗑️ Xóa
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+    }
+
+    function toggleFolder(folderId) {
+      const folderBody = document.getElementById(folderId);
+      const arrow = document.getElementById('arrow_' + folderId);
+      const btn = document.getElementById('btnToggle_' + folderId);
+      if (!folderBody) return;
+
+      const isExpanded = folderBody.classList.contains('expanded');
+      if (isExpanded) {
+        folderBody.classList.remove('expanded');
+        if (arrow) arrow.textContent = '▼';
+        if (btn) btn.style.background = '#ffffff';
+      } else {
+        folderBody.classList.add('expanded');
+        if (arrow) arrow.textContent = '▲';
+        if (btn) btn.style.background = '#e2e8f0';
+      }
+    }
+
+    function filterFolderItems(folderId, query) {
+      const container = document.getElementById('itemsContainer_' + folderId);
+      if (!container) return;
+      const rows = container.querySelectorAll('.item-row');
+      const q = query.trim().toLowerCase();
+      rows.forEach(r => {
+        const text = r.getAttribute('data-search').toLowerCase();
+        r.style.display = text.includes(q) ? 'flex' : 'none';
+      });
     }
 
     // Image preview handler
