@@ -132,9 +132,10 @@
           </div>
 
           <!-- Tên tác phẩm -->
+          <!-- Tên tác phẩm -->
           <div class="form-group">
             <label class="form-label" for="inputTitle">Tác phẩm:</label>
-            <input type="text" id="inputTitle" class="form-input" required value="Long Tranh Hổ Đấu" placeholder="VD: Long Tranh Hổ Đấu, Thuận Buồm Xuôi Gió...">
+            <input type="text" id="inputTitle" class="form-input" required value="Long Tranh Hổ Đấu" placeholder="VD: Long Tranh Hổ Đấu, Thuận Buồm Xuôi Gió..." oninput="onTitleChanged()">
           </div>
 
           <!-- Trạng thái xác thực -->
@@ -181,14 +182,17 @@
             <div class="tag-help">Khách quét mã sẽ thấy rõ tranh này đang ở số thứ tự bao nhiêu trên tổng số lượng giới hạn</div>
           </div>
 
-          <!-- Mã chứng nhận -->
+          <!-- Mã chứng nhận (Tự động tạo) -->
           <div class="form-group">
-            <label class="form-label" for="inputCertCode">Mã chứng nhận:</label>
-            <div class="input-with-button">
-              <input type="text" id="inputCertCode" class="form-input" required value="KND-LH-2026-007" placeholder="VD: KND-LH-2026-007">
-              <button type="button" class="btn-secondary-sm" onclick="generateRandomCode()">🎲 Tạo mã</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label class="form-label" style="margin-bottom: 0;" for="inputCertCode">Mã chứng nhận:</label>
+              <span id="codeAutoTag" style="font-size: 11px; background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 999px; font-weight: 600;">Tự động viết tắt</span>
             </div>
-            <div class="tag-help">Mã này sẽ dùng làm định danh duy nhất khi quét mã QR</div>
+            <div class="input-with-button">
+              <input type="text" id="inputCertCode" class="form-input" required value="KND-LTHD-2026-007" placeholder="VD: KND-LTHD-2026-007">
+              <button type="button" class="btn-secondary-sm" onclick="generateCodeForCurrentTitle()">🔄 Tạo lại</button>
+            </div>
+            <div class="tag-help">Tự động tạo: <strong>KND-[Tên Viết Tắt]-[Năm]-[Số Thứ Tự]</strong> (VD: Long Tranh Hổ Đấu ➔ KND-LTHD-2026-007)</div>
           </div>
 
           <!-- Kích thước -->
@@ -207,6 +211,12 @@
           <div class="form-group">
             <label class="form-label" for="inputAuthor">Tác giả:</label>
             <textarea id="inputAuthor" class="form-textarea" rows="2" placeholder="VD: Phạm Ngọc (Kột Nhà Decor)">Phạm Ngọc&#10;(Kột Nhà Decor)</textarea>
+          </div>
+
+          <!-- Khách hàng sở hữu -->
+          <div class="form-group">
+            <label class="form-label" for="inputOwner">Khách hàng sở hữu:</label>
+            <input type="text" id="inputOwner" class="form-input" value="Nguyễn Văn A" placeholder="VD: Nguyễn Văn A, Sưu tầm riêng, hoặc để trống...">
           </div>
 
           <!-- Submit Buttons inside card -->
@@ -350,7 +360,7 @@
       await fetchSystemInfo();
       await loadAllCertificates();
       setTodayDateIfNotSet();
-      updateEditionCombined();
+      onTitleChanged();
     });
 
     // Switch tabs
@@ -430,8 +440,11 @@
           <img src="${c.image || '/assets/sample-artwork.jpg'}" class="cert-item-thumb" alt="${c.title}">
           <div class="cert-item-info">
             <div class="cert-item-title">${c.title || 'Không tên'}</div>
-            <div class="cert-item-code">Mã: <strong>${c.certCode}</strong> | Phiên bản: ${c.edition}</div>
-            <div style="font-size: 12px; color: #475569;">${c.size || ''} &bull; ${c.material || ''}</div>
+            <div class="cert-item-code">Mã: <strong>${c.certCode}</strong> | Phiên bản: <strong>${c.edition || '01 / 50'}</strong></div>
+            <div style="font-size: 12.5px; color: #166534; font-weight: 600; margin-top: 3px;">
+              👤 Khách sở hữu: <span style="color: #0f172a;">${c.owner ? c.owner : '<em style="color:#94a3b8; font-weight: normal;">Chưa cập nhật</em>'}</span>
+            </div>
+            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${c.size || ''} &bull; Năm: ${c.releaseYear || ''}</div>
             <span class="cert-item-status">${c.verificationStatusText || 'ĐÃ XÁC THỰC'}</span>
           </div>
           <div class="cert-item-actions">
@@ -470,14 +483,81 @@
       document.getElementById('uploadPromptText').style.display = 'none';
     }
 
-    function generateRandomCode() {
-      const year = new Date().getFullYear();
-      const currentVal = parseInt(document.getElementById('inputEditionCurrent').value, 10) || 7;
-      const numFormatted = String(currentVal).padStart(3, '0');
-      document.getElementById('inputCertCode').value = `KND-LH-${year}-${numFormatted}`;
+    // Remove Vietnamese accents / diacritics
+    function removeVietnameseTones(str) {
+      if (!str) return '';
+      str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      str = str.replace(/[đĐ]/g, (m) => m === 'Đ' ? 'D' : 'd');
+      return str;
     }
 
-    function updateEditionCombined() {
+    // Generate acronym from artwork title (e.g. "Long Tranh Hổ Đấu" -> "LTHD")
+    function getTitleAbbreviation(title) {
+      if (!title) return 'TRANH';
+      const clean = removeVietnameseTones(title).replace(/[^a-zA-Z0-9\s]/g, ' ').trim();
+      const words = clean.split(/\s+/).filter(Boolean);
+      if (words.length === 0) return 'TRANH';
+      const abbr = words.map(w => w[0].toUpperCase()).join('');
+      return abbr || 'TRANH';
+    }
+
+    // Find the highest existing serial number printed for a specific artwork title
+    function getHighestSerialForTitle(targetTitle) {
+      if (!currentCertificates || currentCertificates.length === 0 || !targetTitle) return 0;
+      const targetNorm = removeVietnameseTones(targetTitle).trim().toLowerCase();
+
+      let maxSerial = 0;
+      currentCertificates.forEach(c => {
+        const itemNorm = removeVietnameseTones(c.title || '').trim().toLowerCase();
+        if (itemNorm === targetNorm || itemNorm.includes(targetNorm) || targetNorm.includes(itemNorm)) {
+          // Check edition string: e.g. "07 / 50" -> 7
+          if (c.edition && c.edition.includes('/')) {
+            const num = parseInt(c.edition.split('/')[0].trim(), 10);
+            if (!isNaN(num) && num > maxSerial) maxSerial = num;
+          }
+          // Also check certCode suffix: e.g. "KND-LTHD-2026-007" -> 7
+          if (c.certCode && c.certCode.includes('-')) {
+            const parts = c.certCode.split('-');
+            const lastPart = parts[parts.length - 1];
+            const num = parseInt(lastPart, 10);
+            if (!isNaN(num) && num > maxSerial) maxSerial = num;
+          }
+        }
+      });
+      return maxSerial;
+    }
+
+    // When artwork title changes: auto-detect next serial and generate acronym certCode
+    function onTitleChanged() {
+      // Don't override if currently editing an existing certificate
+      if (document.getElementById('editModeId').value) return;
+
+      const title = document.getElementById('inputTitle').value.trim();
+      if (!title) return;
+
+      const highestSerial = getHighestSerialForTitle(title);
+      const nextSerial = highestSerial + 1;
+
+      document.getElementById('inputEditionCurrent').value = nextSerial;
+      updateEditionCombined(false); // Update badges first
+
+      // Generate new certCode: KND-[ABBR]-[YEAR]-[SERIAL]
+      const abbr = getTitleAbbreviation(title);
+      const year = document.getElementById('inputReleaseYear').value.trim() || new Date().getFullYear();
+      const serialPadded = String(nextSerial).padStart(3, '0');
+      document.getElementById('inputCertCode').value = `KND-${abbr}-${year}-${serialPadded}`;
+    }
+
+    function generateCodeForCurrentTitle() {
+      const title = document.getElementById('inputTitle').value.trim() || 'Long Tranh Hổ Đấu';
+      const abbr = getTitleAbbreviation(title);
+      const year = document.getElementById('inputReleaseYear').value.trim() || new Date().getFullYear();
+      const currentVal = parseInt(document.getElementById('inputEditionCurrent').value, 10) || 1;
+      const numFormatted = String(currentVal).padStart(3, '0');
+      document.getElementById('inputCertCode').value = `KND-${abbr}-${year}-${numFormatted}`;
+    }
+
+    function updateEditionCombined(syncCode = true) {
       const currentVal = parseInt(document.getElementById('inputEditionCurrent').value, 10) || 1;
       const totalVal = parseInt(document.getElementById('inputEditionTotal').value, 10) || 50;
 
@@ -491,13 +571,15 @@
       const explain = document.getElementById('editionExplainText');
       if (explain) explain.textContent = `(Bức số ${currentVal} trên tổng số ${totalVal} bản giới hạn)`;
 
-      // Automatically update serial suffix in certificate code
-      const codeInput = document.getElementById('inputCertCode');
-      const codeVal = codeInput.value;
-      if (codeVal && codeVal.includes('-')) {
-        const parts = codeVal.split('-');
-        parts[parts.length - 1] = String(currentVal).padStart(3, '0');
-        codeInput.value = parts.join('-');
+      // Automatically update serial suffix in certificate code if desired
+      if (syncCode) {
+        const codeInput = document.getElementById('inputCertCode');
+        const codeVal = codeInput.value;
+        if (codeVal && codeVal.includes('-')) {
+          const parts = codeVal.split('-');
+          parts[parts.length - 1] = String(currentVal).padStart(3, '0');
+          codeInput.value = parts.join('-');
+        }
       }
 
       // Save user default total limit
@@ -505,11 +587,11 @@
     }
 
     function onTotalLimitChanged() {
-      updateEditionCombined();
+      updateEditionCombined(false);
     }
 
     function onCurrentOrderChanged() {
-      updateEditionCombined();
+      updateEditionCombined(true);
     }
 
     function changeOrderNum(delta) {
@@ -517,7 +599,7 @@
       const cur = parseInt(currentInput.value, 10) || 1;
       const next = Math.max(1, cur + delta);
       currentInput.value = next;
-      updateEditionCombined();
+      updateEditionCombined(true);
     }
 
     function setTodayDate() {
@@ -556,6 +638,7 @@
         formData.append('size', document.getElementById('inputSize').value.trim());
         formData.append('releaseYear', document.getElementById('inputReleaseYear').value.trim());
         formData.append('author', document.getElementById('inputAuthor').value.trim());
+        formData.append('owner', document.getElementById('inputOwner').value.trim());
 
         const vStatus = document.getElementById('inputVerificationStatus').value;
         formData.append('verificationStatus', vStatus);
@@ -612,15 +695,17 @@
       document.getElementById('inputSize').value = cert.size || '';
       document.getElementById('inputReleaseYear').value = cert.releaseYear || '';
       document.getElementById('inputAuthor').value = cert.author || '';
+      document.getElementById('inputOwner').value = cert.owner || '';
       document.getElementById('inputVerificationStatus').value = cert.verificationStatus || 'verified';
 
       // Parse edition into current serial and total
       if (cert.edition) {
+        const parts = cert.edition.split('/');
         if (parts.length === 2) {
           document.getElementById('inputEditionCurrent').value = parseInt(parts[0].trim(), 10) || 1;
           document.getElementById('inputEditionTotal').value = parseInt(parts[1].trim(), 10) || 50;
         }
-        updateEditionCombined();
+        updateEditionCombined(false);
       }
 
       if (cert.image) {
@@ -640,11 +725,10 @@
 
       const defaultTotal = parseInt(localStorage.getItem('default_edition_total'), 10) || 50;
       document.getElementById('inputEditionTotal').value = defaultTotal;
-      const nextNum = (currentCertificates && currentCertificates.length > 0) ? currentCertificates.length + 1 : 1;
-      document.getElementById('inputEditionCurrent').value = nextNum;
-      updateEditionCombined();
 
-      generateRandomCode();
+      // Auto-compute based on default title
+      onTitleChanged();
+
       setTodayDate();
       document.getElementById('btnSubmitForm').innerHTML = '💾 Lưu & Tạo Mã QR Quét';
     }

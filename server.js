@@ -109,7 +109,7 @@ app.get('/api/certificates', (req, res) => {
 // API: Get single certificate by ID or certCode
 app.get('/api/certificates/:id', (req, res) => {
   const certs = getCertificates();
-  const cert = certs.find(c => c.id === req.params.id || c.certCode === req.params.id);
+  const cert = certs.find(c => c.id === req.params.id || c.certCode === req.params.id || (c.altCode && c.altCode === req.params.id));
   if (!cert) {
     return res.status(404).json({ error: 'Không tìm thấy chứng nhận' });
   }
@@ -251,7 +251,7 @@ app.delete('/api/certificates/:id', (req, res) => {
 app.get('/api/qr/:id', async (req, res) => {
   try {
     const certs = getCertificates();
-    const cert = certs.find(c => c.id === req.params.id || c.certCode === req.params.id);
+    const cert = certs.find(c => c.id === req.params.id || c.certCode === req.params.id || (c.altCode && c.altCode === req.params.id));
     if (!cert) {
       return res.status(404).json({ error: 'Không tìm thấy chứng nhận' });
     }

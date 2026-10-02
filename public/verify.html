@@ -185,7 +185,7 @@
       </div>
       <div class="cert-table-row">
         <div class="cert-field-label">Mã chứng nhận:</div>
-        <div id="valCertCode" class="cert-field-value">KND-LH-2026-007</div>
+        <div id="valCertCode" class="cert-field-value">KND-LTHD-2026-007</div>
       </div>
       <div class="cert-table-row">
         <div class="cert-field-label">Kích thước</div>
@@ -198,6 +198,10 @@
       <div class="cert-table-row">
         <div class="cert-field-label">Tác giả</div>
         <div id="valAuthor" class="cert-field-value">Phạm Ngọc<br>(Kột Nhà Decor)</div>
+      </div>
+      <div class="cert-table-row">
+        <div class="cert-field-label">Khách hàng sở hữu</div>
+        <div id="valOwner" class="cert-field-value">Nguyễn Văn A</div>
       </div>
     </section>
 
@@ -236,7 +240,7 @@
         return decodeURIComponent(pathParts[1]);
       }
       const params = new URLSearchParams(window.location.search);
-      return params.get('id') || 'KND-LH-2026-007';
+      return params.get('id') || 'KND-LTHD-2026-007';
     }
 
     async function loadCertificate() {
@@ -286,6 +290,7 @@
       if (cert.size) document.getElementById('valSize').textContent = cert.size;
       if (cert.releaseYear) document.getElementById('valReleaseYear').textContent = cert.releaseYear;
       if (cert.author) document.getElementById('valAuthor').innerHTML = cert.author.replace(/\n/g, '<br>');
+      if (cert.owner) document.getElementById('valOwner').textContent = cert.owner;
 
       // Artwork image
       if (cert.image) {
