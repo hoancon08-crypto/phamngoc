@@ -134,11 +134,15 @@ body {
 .cert-art-img {
   width: 100%;
   height: auto;
-  max-height: 380px;
+  max-height: 450px;
   object-fit: contain;
   display: block;
   cursor: pointer;
-  transition: transform 0.2s;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: auto;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  transition: transform 0.2s ease;
 }
 
 .cert-art-img:active {

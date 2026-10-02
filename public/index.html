@@ -169,12 +169,6 @@
             <input type="text" id="inputSize" class="form-input" value="50 x 70 cm" placeholder="VD: 50 x 70 cm, 60 x 90 cm...">
           </div>
 
-          <!-- Chất liệu -->
-          <div class="form-group">
-            <label class="form-label" for="inputMaterial">Chất liệu:</label>
-            <input type="text" id="inputMaterial" class="form-input" value="In canvas cao cấp" placeholder="VD: In canvas cao cấp, Tráng gương, Sơn dầu...">
-          </div>
-
           <!-- Năm phát hành -->
           <div class="form-group">
             <label class="form-label" for="inputReleaseYear">Năm phát hành:</label>
@@ -498,7 +492,6 @@
         formData.append('edition', document.getElementById('inputEdition').value.trim());
         formData.append('certCode', document.getElementById('inputCertCode').value.trim());
         formData.append('size', document.getElementById('inputSize').value.trim());
-        formData.append('material', document.getElementById('inputMaterial').value.trim());
         formData.append('releaseYear', document.getElementById('inputReleaseYear').value.trim());
         formData.append('author', document.getElementById('inputAuthor').value.trim());
 
@@ -556,7 +549,6 @@
       document.getElementById('inputEdition').value = cert.edition || '';
       document.getElementById('inputCertCode').value = cert.certCode || '';
       document.getElementById('inputSize').value = cert.size || '';
-      document.getElementById('inputMaterial').value = cert.material || '';
       document.getElementById('inputReleaseYear').value = cert.releaseYear || '';
       document.getElementById('inputAuthor').value = cert.author || '';
       document.getElementById('inputVerificationStatus').value = cert.verificationStatus || 'verified';

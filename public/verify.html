@@ -189,10 +189,6 @@
         <div id="valSize" class="cert-field-value">50 x 70 cm</div>
       </div>
       <div class="cert-table-row">
-        <div class="cert-field-label">Chất liệu</div>
-        <div id="valMaterial" class="cert-field-value">In canvas cao cấp</div>
-      </div>
-      <div class="cert-table-row">
         <div class="cert-field-label">Năm phát hành</div>
         <div id="valReleaseYear" class="cert-field-value">2026</div>
       </div>
@@ -271,7 +267,6 @@
       if (cert.edition) document.getElementById('valEdition').textContent = cert.edition;
       if (cert.certCode) document.getElementById('valCertCode').textContent = cert.certCode;
       if (cert.size) document.getElementById('valSize').textContent = cert.size;
-      if (cert.material) document.getElementById('valMaterial').textContent = cert.material;
       if (cert.releaseYear) document.getElementById('valReleaseYear').textContent = cert.releaseYear;
       if (cert.author) document.getElementById('valAuthor').innerHTML = cert.author.replace(/\n/g, '<br>');
 
