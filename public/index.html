@@ -219,16 +219,13 @@
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
         <button id="tabBtnCreate" class="nav-tab-btn active tab-green" onclick="switchTab('create')">
-          ✏️ Nhập thông tin
+          ➕ Tạo mã mới
         </button>
         <button id="tabBtnList" class="nav-tab-btn" onclick="switchTab('list')">
-          📁 Thư mục tranh (<span id="certCount">0</span>)
+          📋 Danh sách tranh (<span id="certCount">0</span>)
         </button>
-        <a href="/batch-print" target="_blank" class="nav-tab-btn" style="text-decoration: none; color: #ea580c; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-          🖨️ In 50 Mã QR (Hàng loạt)
-        </a>
         <button id="tabBtnPreview" class="nav-tab-btn" onclick="switchTab('preview')">
-          👁️ Xem trước
+          👁️ Xem trước điện thoại
         </button>
       </nav>
     </header>
@@ -317,12 +314,9 @@
                 </div>
               </div>
             </div>
-            <input type="hidden" id="inputEdition" value="07 / 50">
+            <input type="hidden" id="inputEdition" value="01 / 50">
             <div class="tag-help">Khách quét mã sẽ thấy rõ tranh này đang ở số thứ tự bao nhiêu trên tổng số lượng giới hạn</div>
-            <div style="margin-top: 8px;">
-              <a href="/batch-print" target="_blank" style="display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: 700; color: #ea580c; border: 1.5px solid #fdba74; background: #fff7ed; padding: 9px 14px; border-radius: 8px; text-decoration: none; font-size: 13.5px; transition: background 0.2s;">
-                🖨️ Mở Trang In Toàn Bộ 50 Mã QR Cùng Lúc (Khổ A4 / Decal)
-              </a>
+            <div id="autoNextBanner" style="display: none; margin-top: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #065f46;">
             </div>
           </div>
 
@@ -440,6 +434,9 @@
         <button class="btn-secondary-sm" style="padding: 12px; font-size: 14px;" onclick="printSticker()">
           🖨️ In Tem Dán Sau Tranh (Print Sticker)
         </button>
+        <button class="btn-primary" style="background: #15803d; border-color: #15803d; padding: 13px; font-size: 15px; margin-top: 4px;" onclick="closeQrModal(); focusNextCreate();">
+          ➡️ Đã Xong, Tạo Bản Kế Tiếp!
+        </button>
       </div>
 
       <!-- Printable Sticker View -->
@@ -457,6 +454,38 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ================= MODAL: SỬA TÊN KHÁCH HÀNG SỞ HỮU ================= -->
+  <div id="quickEditModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="closeQuickEditModal()">&times;</button>
+      
+      <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">
+        👤 Cập Nhật Tên Khách Hàng Sở Hữu
+      </div>
+      <div style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+        Tác phẩm: <strong id="quickEditTitle">Long Tranh Hổ Đấu</strong> &bull; Bản: <strong id="quickEditEdition" style="color: #15803d;">01 / 50</strong>
+        <div style="font-size: 11.5px; color: #94a3b8; margin-top: 2px;">Mã: <span id="quickEditCertCode">KND-LTHD-2026-001</span></div>
+      </div>
+
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label" for="quickEditOwnerInput">Tên khách hàng sở hữu tranh:</label>
+        <input type="text" id="quickEditOwnerInput" class="form-input" placeholder="VD: Nguyễn Văn A, Trần Thị B..." style="font-size: 15px; font-weight: 600;" onkeydown="if(event.key==='Enter'){event.preventDefault();submitQuickOwner();}">
+        <div class="tag-help">Sau khi lưu, khi khách hàng quét mã QR trên tranh sẽ hiển thị ngay tên của họ!</div>
+      </div>
+
+      <input type="hidden" id="quickEditCodeHidden">
+
+      <div style="display: flex; gap: 8px; margin-top: 20px;">
+        <button type="button" class="btn-primary" id="btnSaveQuickOwner" style="flex: 1;" onclick="submitQuickOwner()">
+          💾 Lưu Tên Khách Hàng
+        </button>
+        <button type="button" class="btn-secondary-sm" style="padding: 12px 18px;" onclick="closeQuickEditModal()">
+          Đóng
+        </button>
+      </div>
     </div>
   </div>
 
@@ -651,22 +680,22 @@
                 Mã tranh: <strong>${group.items[0]?.certCode?.split('-').slice(0, 3).join('-') || 'KND'}</strong> (từ bản 01 đến ${String(group.items.length).padStart(2, '0')})
               </div>
               <div style="display: flex; gap: 8px;">
-                <a href="/batch-print" target="_blank" class="btn-secondary-sm" style="text-decoration: none; color: #ea580c; font-weight: 700; border-color: #fdba74; background: #fff7ed; padding: 6px 12px;">
-                  🖨️ In Trọn Bộ ${group.items.length} Tem Decal
-                </a>
+                <button type="button" class="btn-secondary-sm" onclick="switchTab('create'); focusNextCreate();" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
+                  ➕ Tạo bản tiếp theo
+                </button>
               </div>
             </div>
 
-            <!-- Danh sách con 50 bản (Thu gọn/Mở rộng) -->
-            <div id="${folderId}" class="folder-body">
+            <!-- Danh sách các bản đã cấp mã (Mở rộng mặc định) -->
+            <div id="${folderId}" class="folder-body expanded">
               <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                <input type="text" placeholder="🔍 Tìm kiếm bản số (VD: 07) hoặc tên khách..." 
+                <input type="text" placeholder="🔍 Tìm kiếm bản số (VD: 01) hoặc tên khách..." 
                   style="width: 100%; max-width: 380px; padding: 7px 12px; font-size: 13px; border: 1.5px solid #cbd5e1; border-radius: 8px;"
                   oninput="filterFolderItems('${folderId}', this.value)">
                 <span style="font-size: 12px; color: #64748b; white-space: nowrap;">Tổng ${group.items.length} bản</span>
               </div>
 
-              <div id="itemsContainer_${folderId}" style="max-height: 460px; overflow-y: auto; padding-right: 4px;">
+              <div id="itemsContainer_${folderId}" style="max-height: 480px; overflow-y: auto; padding-right: 4px;">
                 ${group.items.map(c => `
                   <div class="sub-edition-item item-row" data-search="${c.edition} ${c.certCode} ${c.owner || ''}">
                     <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
@@ -675,17 +704,20 @@
                       </span>
                       <div style="min-width: 0;">
                         <div style="font-size: 12px; font-weight: 700; color: #334155;">${c.certCode}</div>
-                        <div style="font-size: 12px; color: ${c.owner && c.owner !== 'Chưa kích hoạt' ? '#166534; font-weight: 600;' : '#94a3b8;'}">
-                          👤 ${c.owner && c.owner !== 'Chưa kích hoạt' ? `Khách: <strong>${c.owner}</strong>` : 'Chưa kích hoạt'}
+                        <div style="font-size: 12px; color: ${c.owner && c.owner !== 'Chưa kích hoạt' ? '#166534; font-weight: 700;' : '#ea580c; font-weight: 600;'}">
+                          👤 ${c.owner && c.owner !== 'Chưa kích hoạt' ? `Khách: <strong>${c.owner}</strong>` : 'Chưa có tên khách'}
                         </div>
                       </div>
                     </div>
 
-                    <div style="display: flex; gap: 6px; flex-shrink: 0;">
-                      <button class="btn-icon-action btn-qr" onclick="event.stopPropagation(); showQrModalForCert('${c.certCode}')" title="Xem mã QR">
+                    <div style="display: flex; gap: 6px; flex-shrink: 0; align-items: center;">
+                      <button type="button" class="btn-secondary-sm" style="color: #15803d; border-color: #86efac; background: #f0fdf4; font-weight: 700; padding: 5px 10px; font-size: 12px;" onclick="event.stopPropagation(); openQuickEditOwner('${c.certCode}', '${c.edition}', '${c.owner || ''}', '${group.title}')" title="Cập nhật tên khách hàng sở hữu">
+                        👤 Sửa Tên Khách
+                      </button>
+                      <button type="button" class="btn-icon-action btn-qr" onclick="event.stopPropagation(); showQrModalForCert('${c.certCode}')" title="Xem & in mã QR">
                         📲 QR
                       </button>
-                      <button class="btn-icon-action" onclick="event.stopPropagation(); loadCertToEdit('${c.certCode}')" title="Chỉnh sửa thông tin / chủ sở hữu">
+                      <button type="button" class="btn-icon-action" onclick="event.stopPropagation(); loadCertToEdit('${c.certCode}')" title="Chỉnh sửa toàn bộ thông tin">
                         ✏️ Sửa
                       </button>
                       <a href="/verify/${encodeURIComponent(c.certCode)}" target="_blank" class="btn-icon-action" onclick="event.stopPropagation()" title="Xem trang khách hàng">
@@ -940,9 +972,92 @@
         // Show QR Modal immediately
         showQrModalForCert(savedCert.certCode);
 
+        // If in create mode: Automatically advance to NEXT serial number!
+        if (!isEdit) {
+          const title = document.getElementById('inputTitle').value.trim();
+          const highestSerial = getHighestSerialForTitle(title);
+          const nextSerial = highestSerial + 1;
+
+          document.getElementById('inputEditionCurrent').value = nextSerial;
+          updateEditionCombined(false);
+
+          // Generate next cert code: KND-[ABBR]-[YEAR]-[SERIAL]
+          const abbr = getTitleAbbreviation(title);
+          const year = document.getElementById('inputReleaseYear').value.trim() || new Date().getFullYear();
+          const serialPadded = String(nextSerial).padStart(3, '0');
+          document.getElementById('inputCertCode').value = `KND-${abbr}-${year}-${serialPadded}`;
+
+          // Clear owner field so user can type next customer's name!
+          document.getElementById('inputOwner').value = '';
+
+          // Show friendly hint banner
+          const banner = document.getElementById('autoNextBanner');
+          if (banner) {
+            banner.innerHTML = `✅ <strong>Đã xuất xong bản ${savedCert.edition}!</strong> Hệ thống đã tự động chuyển sang <strong>Bản số ${String(nextSerial).padStart(2, '0')} / ${document.getElementById('inputEditionTotal').value}</strong> và tạo sẵn mã mới để bạn tiếp tục!`;
+            banner.style.display = 'block';
+          }
+        }
+
       } catch (err) {
         console.error('Error saving:', err);
         alert('Lỗi kết nối máy chủ!');
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    function focusNextCreate() {
+      switchTab('create');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+        const ownerInput = document.getElementById('inputOwner');
+        if (ownerInput) {
+          ownerInput.focus();
+        }
+      }, 300);
+    }
+
+    function openQuickEditOwner(certCode, edition, currentOwner, title) {
+      document.getElementById('quickEditCodeHidden').value = certCode;
+      document.getElementById('quickEditCertCode').textContent = certCode;
+      document.getElementById('quickEditEdition').textContent = edition;
+      document.getElementById('quickEditTitle').textContent = title || 'Tác phẩm';
+      document.getElementById('quickEditOwnerInput').value = (currentOwner === 'Chưa kích hoạt' ? '' : currentOwner);
+      document.getElementById('quickEditModal').classList.add('active');
+      setTimeout(() => {
+        document.getElementById('quickEditOwnerInput').focus();
+      }, 100);
+    }
+
+    function closeQuickEditModal() {
+      document.getElementById('quickEditModal').classList.remove('active');
+    }
+
+    async function submitQuickOwner() {
+      const code = document.getElementById('quickEditCodeHidden').value;
+      const owner = document.getElementById('quickEditOwnerInput').value.trim();
+      const btn = document.getElementById('btnSaveQuickOwner');
+      const oldText = btn.innerHTML;
+      btn.innerHTML = '⏳ Đang lưu...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/certificates/${encodeURIComponent(code)}/owner`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner: owner || 'Chưa kích hoạt' })
+        });
+        if (res.ok) {
+          closeQuickEditModal();
+          await loadAllCertificates();
+          alert(`✅ Đã lưu tên khách hàng: "${owner || 'Chưa có'}" cho mã ${code}`);
+        } else {
+          alert('Không thể lưu tên khách hàng');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Lỗi kết nối máy chủ');
       } finally {
         btn.innerHTML = oldText;
         btn.disabled = false;
