@@ -218,7 +218,7 @@
 
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
-        <button id="tabBtnCreate" class="nav-tab-btn active tab-green" onclick="switchTab('create')">
+        <button id="tabBtnCreate" class="nav-tab-btn active tab-green" onclick="prepareNextCertificate()">
           ➕ Tạo mã mới
         </button>
         <button id="tabBtnList" class="nav-tab-btn" onclick="switchTab('list')">
@@ -292,10 +292,10 @@
                 <div>
                   <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #166534; font-weight: 700;">Hệ thống tự động chọn:</div>
                   <div id="editionAutoBadge" style="font-size: 22px; font-weight: 800; color: #15803d; margin-top: 2px;">
-                    07 / 50
+                    02 / 50
                   </div>
                   <div style="font-size: 12px; color: #166534; font-weight: 500; margin-top: 2px;" id="editionExplainText">
-                    (Bức số 7 trên tổng số 50 bản giới hạn)
+                    (Bức số 2 trên tổng số 50 bản giới hạn)
                   </div>
                 </div>
                 <div style="text-align: right;">
@@ -309,12 +309,12 @@
                 <span style="font-size: 12px; color: #475569;">Số thứ tự tranh hiện tại:</span>
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <button type="button" class="btn-secondary-sm" style="padding: 4px 10px; font-weight: bold;" onclick="changeOrderNum(-1)">◀</button>
-                  <input type="number" id="inputEditionCurrent" min="1" value="7" style="width: 55px; text-align: center; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px; font-size: 14px;" oninput="onCurrentOrderChanged()">
+                  <input type="number" id="inputEditionCurrent" min="1" value="2" style="width: 55px; text-align: center; font-weight: 700; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px; font-size: 14px;" oninput="onCurrentOrderChanged()">
                   <button type="button" class="btn-secondary-sm" style="padding: 4px 10px; font-weight: bold;" onclick="changeOrderNum(1)">▶</button>
                 </div>
               </div>
             </div>
-            <input type="hidden" id="inputEdition" value="01 / 50">
+            <input type="hidden" id="inputEdition" value="02 / 50">
             <div class="tag-help">Khách quét mã sẽ thấy rõ tranh này đang ở số thứ tự bao nhiêu trên tổng số lượng giới hạn</div>
             <div id="autoNextBanner" style="display: none; margin-top: 10px; background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #065f46;">
             </div>
@@ -327,10 +327,10 @@
               <span id="codeAutoTag" style="font-size: 11px; background: #eff6ff; color: #1d4ed8; padding: 2px 8px; border-radius: 999px; font-weight: 600;">Tự động viết tắt</span>
             </div>
             <div class="input-with-button">
-              <input type="text" id="inputCertCode" class="form-input" required value="KND-LTHD-2026-007" placeholder="VD: KND-LTHD-2026-007">
+              <input type="text" id="inputCertCode" class="form-input" required value="KND-LTHD-2026-002" placeholder="VD: KND-LTHD-2026-002">
               <button type="button" class="btn-secondary-sm" onclick="generateCodeForCurrentTitle()">🔄 Tạo lại</button>
             </div>
-            <div class="tag-help">Tự động tạo: <strong>KND-[Tên Viết Tắt]-[Năm]-[Số Thứ Tự]</strong> (VD: Long Tranh Hổ Đấu ➔ KND-LTHD-2026-007)</div>
+            <div class="tag-help">Tự động tạo: <strong>KND-[Tên Viết Tắt]-[Năm]-[Số Thứ Tự]</strong> (VD: Long Tranh Hổ Đấu ➔ KND-LTHD-2026-002)</div>
           </div>
 
           <!-- Kích thước -->
@@ -354,7 +354,7 @@
           <!-- Khách hàng sở hữu -->
           <div class="form-group">
             <label class="form-label" for="inputOwner">Khách hàng sở hữu:</label>
-            <input type="text" id="inputOwner" class="form-input" value="Nguyễn Văn A" placeholder="VD: Nguyễn Văn A, Sưu tầm riêng, hoặc để trống...">
+            <input type="text" id="inputOwner" class="form-input" value="" placeholder="VD: Nguyễn Văn A, Sưu tầm riêng, hoặc để trống...">
           </div>
 
           <!-- Submit Buttons inside card -->
@@ -377,7 +377,7 @@
           <div class="card-title" style="margin-bottom: 0;">
             <span>📚</span> Danh Sách Tranh Đã Cấp Mã
           </div>
-          <button class="btn-secondary-sm" onclick="switchTab('create'); resetForm();">
+          <button class="btn-secondary-sm" onclick="prepareNextCertificate()">
             ➕ Thêm mới
           </button>
         </div>
@@ -533,7 +533,7 @@
       await fetchSystemInfo();
       await loadAllCertificates();
       setTodayDateIfNotSet();
-      onTitleChanged();
+      prepareNextCertificate();
     });
 
     // Switch tabs
@@ -680,7 +680,7 @@
                 Mã tranh: <strong>${group.items[0]?.certCode?.split('-').slice(0, 3).join('-') || 'KND'}</strong> (từ bản 01 đến ${String(group.items.length).padStart(2, '0')})
               </div>
               <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn-secondary-sm" onclick="switchTab('create'); focusNextCreate();" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
+                <button type="button" class="btn-secondary-sm" onclick="prepareNextCertificate()" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
                   ➕ Tạo bản tiếp theo
                 </button>
               </div>
@@ -1007,15 +1007,54 @@
       }
     }
 
-    function focusNextCreate() {
+    function prepareNextCertificate() {
+      // Clear edit mode
+      document.getElementById('editModeId').value = '';
+      document.getElementById('btnSubmitForm').innerHTML = '💾 Lưu & Tạo Mã QR Quét';
+
+      // Title
+      const titleInput = document.getElementById('inputTitle');
+      const title = (titleInput && titleInput.value.trim()) ? titleInput.value.trim() : 'Long Tranh Hổ Đấu';
+
+      // Scan all certificates to find the HIGHEST serial number for this artwork title
+      const highestSerial = getHighestSerialForTitle(title);
+      const nextSerial = highestSerial + 1;
+      const totalVal = parseInt(document.getElementById('inputEditionTotal').value, 10) || 50;
+
+      // Update inputs & badges immediately
+      document.getElementById('inputEditionCurrent').value = nextSerial;
+      updateEditionCombined(false);
+
+      // Generate next cert code: KND-[ABBR]-[YEAR]-[SERIAL]
+      const abbr = getTitleAbbreviation(title);
+      const yearInput = document.getElementById('inputReleaseYear');
+      const year = (yearInput && yearInput.value.trim()) ? yearInput.value.trim() : new Date().getFullYear();
+      const serialPadded = String(nextSerial).padStart(3, '0');
+      document.getElementById('inputCertCode').value = `KND-${abbr}-${year}-${serialPadded}`;
+
+      // Reset owner to empty for next customer
+      const ownerInput = document.getElementById('inputOwner');
+      if (ownerInput) {
+        ownerInput.value = '';
+      }
+
+      // Show friendly banner
+      const banner = document.getElementById('autoNextBanner');
+      if (banner) {
+        banner.innerHTML = `✨ <strong>Hệ thống đã tự động chọn Bản số ${String(nextSerial).padStart(2, '0')} / ${totalVal}</strong> (Mã: <strong>KND-${abbr}-${year}-${serialPadded}</strong>).<br>Bạn chỉ cần nhập tên khách hàng rồi bấm Lưu!`;
+        banner.style.display = 'block';
+      }
+
+      // Switch to create tab & scroll
       switchTab('create');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => {
-        const ownerInput = document.getElementById('inputOwner');
-        if (ownerInput) {
-          ownerInput.focus();
-        }
-      }, 300);
+        if (ownerInput) ownerInput.focus();
+      }, 200);
+    }
+
+    function focusNextCreate() {
+      prepareNextCertificate();
     }
 
     function openQuickEditOwner(certCode, edition, currentOwner, title) {
@@ -1099,18 +1138,9 @@
     }
 
     function resetForm() {
-      document.getElementById('editModeId').value = '';
-      document.getElementById('certForm').reset();
       useSampleImage();
-
-      const defaultTotal = parseInt(localStorage.getItem('default_edition_total'), 10) || 50;
-      document.getElementById('inputEditionTotal').value = defaultTotal;
-
-      // Auto-compute based on default title
-      onTitleChanged();
-
       setTodayDate();
-      document.getElementById('btnSubmitForm').innerHTML = '💾 Lưu & Tạo Mã QR Quét';
+      prepareNextCertificate();
     }
 
     async function deleteCert(code) {
