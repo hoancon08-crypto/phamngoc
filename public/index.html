@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Công Cụ Quản Lý & Xác Thực Tranh - Kột Nhà Decor</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Admin specific helpers */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .tag-help {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .badge-preview {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .sticker-card {
+      border: 2px dashed #94a3b8;
+      border-radius: 12px;
+      padding: 16px;
+      background: white;
+      text-align: center;
+      margin-top: 14px;
+    }
+
+    .sticker-title {
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #0f172a;
+    }
+
+    .network-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #eff6ff;
+      color: #1e40af;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .btn-danger-sm {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="editor-wrapper">
+    <!-- Navbar Header -->
+    <header class="app-navbar">
+      <div class="nav-header">
+        <div class="app-title">
+          <span>🎨</span>
+          <span>Kột Nhà Decor &bull; Tạo Mã Xác Thực</span>
+        </div>
+        <button class="btn-secondary-sm" onclick="openDomainSettings()" title="Cấu hình URL quét">
+          🌐 Cài đặt URL
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button id="tabBtnCreate" class="nav-tab-btn active tab-green" onclick="switchTab('create')">
+          ✏️ Nhập thông tin
+        </button>
+        <button id="tabBtnList" class="nav-tab-btn" onclick="switchTab('list')">
+          📋 Danh sách tranh (<span id="certCount">0</span>)
+        </button>
+        <button id="tabBtnPreview" class="nav-tab-btn" onclick="switchTab('preview')">
+          👁️ Xem trước
+        </button>
+      </nav>
+    </header>
+
+    <!-- ================= TAB 1: NHẬP THÔNG TIN TÁC PHẨM ================= -->
+    <div id="tabContentCreate" class="tab-content active">
+      <form id="certForm" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="editModeId" value="">
+
+        <!-- Artwork Photo Upload -->
+        <div class="editor-card">
+          <div class="card-title">
+            <span>🖼️</span> Ảnh Tác Phẩm
+          </div>
+          
+          <div class="image-upload-zone" onclick="document.getElementById('artworkImageInput').click()">
+            <img id="imagePreview" class="upload-preview-img" src="/assets/sample-artwork.jpg" alt="Xem trước">
+            <div id="uploadPromptText">
+              <div class="upload-placeholder-icon">📸</div>
+              <div class="upload-text">Bấm vào đây để chụp hoặc chọn ảnh từ điện thoại</div>
+              <div class="upload-subtext">Hỗ trợ JPG, PNG, WEBP (Tối đa 25MB)</div>
+            </div>
+            <input type="file" id="artworkImageInput" accept="image/*" style="display: none;" onchange="handleImageSelected(this)">
+          </div>
+
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button type="button" class="btn-secondary-sm" style="flex: 1; padding: 8px;" onclick="document.getElementById('artworkImageInput').click()">
+              📁 Chọn ảnh mới
+            </button>
+            <button type="button" class="btn-secondary-sm" style="flex: 1; padding: 8px;" onclick="useSampleImage()">
+              🔄 Dùng ảnh mẫu rồng hổ
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Form Fields -->
+        <div class="editor-card">
+          <div class="card-title">
+            <span>📝</span> Thông Tin Chứng Nhận
+          </div>
+
+          <!-- Tên tác phẩm -->
+          <div class="form-group">
+            <label class="form-label" for="inputTitle">Tác phẩm:</label>
+            <input type="text" id="inputTitle" class="form-input" required value="Long Tranh Hổ Đấu" placeholder="VD: Long Tranh Hổ Đấu, Thuận Buồm Xuôi Gió...">
+          </div>
+
+          <!-- Trạng thái xác thực -->
+          <div class="form-group">
+            <label class="form-label" for="inputVerificationStatus">Trạng thái xác thực:</label>
+            <select id="inputVerificationStatus" class="form-select" onchange="updateVerificationText(this.value)">
+              <option value="verified" selected>✅ ĐÃ XÁC THỰC (Chính hãng)</option>
+              <option value="pending">⏳ CHỜ XÁC THỰC (Đang xử lý)</option>
+              <option value="invalid">❌ CHƯA HỢP LỆ (Cảnh báo)</option>
+            </select>
+          </div>
+
+          <!-- Phiên bản -->
+          <div class="form-group">
+            <label class="form-label" for="inputEdition">Phiên bản:</label>
+            <input type="text" id="inputEdition" class="form-input" required value="07 / 50" placeholder="VD: 07 / 50, Độc bản 01/01...">
+          </div>
+
+          <!-- Mã chứng nhận -->
+          <div class="form-group">
+            <label class="form-label" for="inputCertCode">Mã chứng nhận:</label>
+            <div class="input-with-button">
+              <input type="text" id="inputCertCode" class="form-input" required value="KND-LH-2026-007" placeholder="VD: KND-LH-2026-007">
+              <button type="button" class="btn-secondary-sm" onclick="generateRandomCode()">🎲 Tạo mã</button>
+            </div>
+            <div class="tag-help">Mã này sẽ dùng làm định danh duy nhất khi quét mã QR</div>
+          </div>
+
+          <!-- Kích thước -->
+          <div class="form-group">
+            <label class="form-label" for="inputSize">Kích thước:</label>
+            <input type="text" id="inputSize" class="form-input" value="50 x 70 cm" placeholder="VD: 50 x 70 cm, 60 x 90 cm...">
+          </div>
+
+          <!-- Chất liệu -->
+          <div class="form-group">
+            <label class="form-label" for="inputMaterial">Chất liệu:</label>
+            <input type="text" id="inputMaterial" class="form-input" value="In canvas cao cấp" placeholder="VD: In canvas cao cấp, Tráng gương, Sơn dầu...">
+          </div>
+
+          <!-- Năm phát hành -->
+          <div class="form-group">
+            <label class="form-label" for="inputReleaseYear">Năm phát hành:</label>
+            <input type="text" id="inputReleaseYear" class="form-input" value="2026" placeholder="VD: 2026">
+          </div>
+
+          <!-- Tác giả -->
+          <div class="form-group">
+            <label class="form-label" for="inputAuthor">Tác giả:</label>
+            <textarea id="inputAuthor" class="form-textarea" rows="2" placeholder="VD: Phạm Ngọc (Kột Nhà Decor)">Phạm Ngọc&#10;(Kột Nhà Decor)</textarea>
+          </div>
+
+          <!-- Submit Buttons inside card -->
+          <div style="margin-top: 24px; padding-bottom: 50px;">
+            <button type="submit" id="btnSubmitForm" class="btn-primary" style="font-size: 17px; padding: 16px;">
+              💾 Lưu & Tạo Mã QR Quét
+            </button>
+            <button type="button" class="btn-outline" onclick="previewCurrentForm()">
+              👁️ Xem Thử Giao Diện Khách Xem
+            </button>
+          </div>
+        </div>
+
+        <!-- Sticky Floating Bottom Action Bar for Easy Mobile Tapping -->
+        <div class="floating-bottom-bar">
+          <button type="button" class="btn-bar-preview" onclick="previewCurrentForm()">
+            👁️ Xem trước
+          </button>
+          <button type="submit" class="btn-bar-submit">
+            💾 Lưu & Tạo mã QR
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ================= TAB 2: DANH SÁCH TÁC PHẨM ĐÃ LƯU ================= -->
+    <div id="tabContentList" class="tab-content">
+      <div class="editor-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <div class="card-title" style="margin-bottom: 0;">
+            <span>📚</span> Danh Sách Tranh Đã Cấp Mã
+          </div>
+          <button class="btn-secondary-sm" onclick="switchTab('create'); resetForm();">
+            ➕ Thêm mới
+          </button>
+        </div>
+
+        <div id="certificatesList">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: XEM TRƯỚC TRỰC QUAN ================= -->
+    <div id="tabContentPreview" class="tab-content">
+      <div style="text-align: center; padding: 12px;">
+        <span style="font-size: 13px; color: #64748b;">Đây là giao diện y hệt điện thoại khách hàng sẽ nhìn thấy khi quét mã QR:</span>
+      </div>
+      <div style="padding: 0 10px;">
+        <iframe id="previewIframe" src="/verify/KND-LH-2026-007" style="width: 100%; height: 750px; border: 1px solid #d1d5db; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: HIỂN THỊ MÃ QR ================= -->
+  <div id="qrModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="closeQrModal()">&times;</button>
+      
+      <div style="font-size: 18px; font-weight: 800; color: #15803d; margin-bottom: 4px;">
+        ✅ Đã Tạo Mã QR Thành Công!
+      </div>
+      <div style="font-size: 13px; color: #6b7280;" id="modalCertSub">
+        Mã: <strong id="modalCertCode">KND-LH-2026-007</strong>
+      </div>
+
+      <!-- QR Code Display -->
+      <div class="qr-preview-container">
+        <img id="qrImageElement" class="qr-image" src="" alt="Mã QR Xác Thực">
+      </div>
+
+      <div style="font-size: 12px; color: #475569; margin-bottom: 12px; word-break: break-all;" id="modalScanUrl">
+        http://...
+      </div>
+
+      <!-- Action buttons inside modal -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn-primary" onclick="downloadQrImage()">
+          📥 Tải Ảnh Mã QR Về Điện Thoại
+        </button>
+        <button class="btn-secondary-sm" style="padding: 12px; font-size: 14px;" onclick="openVerificationPage()">
+          🔗 Mở Trang Xác Thực Của Tranh
+        </button>
+        <button class="btn-secondary-sm" style="padding: 12px; font-size: 14px;" onclick="copyQrLink()">
+          📋 Sao Chép Đường Dẫn Quét
+        </button>
+        <button class="btn-secondary-sm" style="padding: 12px; font-size: 14px;" onclick="printSticker()">
+          🖨️ In Tem Dán Sau Tranh (Print Sticker)
+        </button>
+      </div>
+
+      <!-- Printable Sticker View -->
+      <div id="printableStickerArea" style="display: none;">
+        <div class="sticker-card">
+          <div style="font-size: 13px; font-weight: bold; color: #f97316;">KỘT NHÀ DECOR &bull; TEM XÁC THỰC TÁC QUYỀN</div>
+          <img id="stickerQr" src="" style="width: 140px; height: 140px; margin: 10px auto; display: block;">
+          <div id="stickerTitle" class="sticker-title">Long Tranh Hổ Đấu</div>
+          <div style="font-size: 13px; color: #334155; margin-top: 4px;">
+            Phiên bản: <strong id="stickerEdition">07 / 50</strong> | Mã: <strong id="stickerCode">KND-LH-2026-007</strong>
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+            Quét mã QR bằng điện thoại / Zalo để kiểm tra chứng nhận chính hãng
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CÀI ĐẶT URL MẠNG / QUÉT ================= -->
+  <div id="domainModal" class="modal-overlay">
+    <div class="modal-card">
+      <button class="modal-close-btn" onclick="closeDomainModal()">&times;</button>
+      
+      <div style="font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 12px;">
+        🌐 Cấu hình Địa chỉ Quét Mã QR
+      </div>
+      
+      <div class="network-badge" id="detectedLanBadge">
+        📶 IP nội bộ Wi-Fi: <strong id="detectedLanIp">Đang nhận diện...</strong>
+      </div>
+
+      <div style="text-align: left; font-size: 13px; color: #475569; margin-bottom: 14px;">
+        Nếu bạn dùng cùng mạng Wi-Fi, mã QR tự động dùng địa chỉ IP nội bộ để khách / điện thoại khác cùng quét được. Nếu bạn đã có tên miền riêng hoặc dịch vụ Cloudflare / Ngrok / Vercel, hãy điền bên dưới:
+      </div>
+
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label" for="customBaseUrlInput">Địa chỉ trang chủ (Base URL):</label>
+        <input type="text" id="customBaseUrlInput" class="form-input" placeholder="VD: https://kotnhadecor.com hoặc http://192.168.1.168:3000">
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-primary" onclick="saveDomainSettings()" style="flex: 1;">
+          Lưu Cấu Hình
+        </button>
+        <button class="btn-secondary-sm" onclick="resetToAutoDomain()" style="padding: 10px;">
+          Mặc định tự động
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentCertificates = [];
+    let systemInfo = { localIp: 'localhost', port: 3000, baseUrl: window.location.origin, lanUrl: window.location.origin };
+    let currentActiveQrUrl = '';
+    let currentCertCode = '';
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', async () => {
+      await fetchSystemInfo();
+      await loadAllCertificates();
+      setTodayDateIfNotSet();
+    });
+
+    // Switch tabs
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab-btn').forEach(el => el.classList.remove('active'));
+
+      if (tab === 'create') {
+        document.getElementById('tabContentCreate').classList.add('active');
+        document.getElementById('tabBtnCreate').classList.add('active');
+      } else if (tab === 'list') {
+        document.getElementById('tabContentList').classList.add('active');
+        document.getElementById('tabBtnList').classList.add('active');
+        loadAllCertificates();
+      } else if (tab === 'preview') {
+        document.getElementById('tabContentPreview').classList.add('active');
+        document.getElementById('tabBtnPreview').classList.add('active');
+        updatePreviewIframe();
+      }
+    }
+
+    // System info (IP, Host)
+    async function fetchSystemInfo() {
+      try {
+        const res = await fetch('/api/info');
+        if (res.ok) {
+          systemInfo = await res.json();
+          document.getElementById('detectedLanIp').textContent = systemInfo.lanUrl;
+          
+          const savedCustomUrl = localStorage.getItem('custom_scan_base_url');
+          if (savedCustomUrl) {
+            document.getElementById('customBaseUrlInput').value = savedCustomUrl;
+          } else {
+            // Default to lanUrl if on localhost
+            document.getElementById('customBaseUrlInput').value = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+              ? systemInfo.lanUrl
+              : window.location.origin;
+          }
+        }
+      } catch (e) {
+        console.warn('System info error:', e);
+      }
+    }
+
+    // Get active base URL for QR scanning
+    function getActiveBaseUrl() {
+      const custom = localStorage.getItem('custom_scan_base_url');
+      if (custom) return custom.replace(/\/$/, '');
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return systemInfo.lanUrl || window.location.origin;
+      }
+      return window.location.origin;
+    }
+
+    // Load Certificates
+    async function loadAllCertificates() {
+      try {
+        const res = await fetch('/api/certificates');
+        if (res.ok) {
+          currentCertificates = await res.json();
+          renderCertificatesList(currentCertificates);
+          document.getElementById('certCount').textContent = currentCertificates.length;
+        }
+      } catch (err) {
+        console.error('Error loading certs:', err);
+      }
+    }
+
+    function renderCertificatesList(certs) {
+      const container = document.getElementById('certificatesList');
+      if (!certs || certs.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 20px;">Chưa có chứng nhận nào được tạo.</div>`;
+        return;
+      }
+
+      container.innerHTML = certs.map(c => `
+        <div class="cert-list-item">
+          <img src="${c.image || '/assets/sample-artwork.jpg'}" class="cert-item-thumb" alt="${c.title}">
+          <div class="cert-item-info">
+            <div class="cert-item-title">${c.title || 'Không tên'}</div>
+            <div class="cert-item-code">Mã: <strong>${c.certCode}</strong> | Phiên bản: ${c.edition}</div>
+            <div style="font-size: 12px; color: #475569;">${c.size || ''} &bull; ${c.material || ''}</div>
+            <span class="cert-item-status">${c.verificationStatusText || 'ĐÃ XÁC THỰC'}</span>
+          </div>
+          <div class="cert-item-actions">
+            <button class="btn-icon-action btn-qr" onclick="showQrModalForCert('${c.certCode}')">
+              📲 Mã QR
+            </button>
+            <button class="btn-icon-action" onclick="loadCertToEdit('${c.certCode}')">
+              ✏️ Sửa
+            </button>
+            <a href="/verify/${encodeURIComponent(c.certCode)}" target="_blank" class="btn-icon-action">
+              👁️ Xem
+            </a>
+            <button class="btn-danger-sm" onclick="deleteCert('${c.certCode}')">
+              🗑️ Xóa
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Image preview handler
+    function handleImageSelected(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('imagePreview').src = e.target.result;
+          document.getElementById('uploadPromptText').style.display = 'none';
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function useSampleImage() {
+      document.getElementById('imagePreview').src = '/assets/sample-artwork.jpg';
+      document.getElementById('artworkImageInput').value = '';
+      document.getElementById('uploadPromptText').style.display = 'none';
+    }
+
+    function generateRandomCode() {
+      const year = new Date().getFullYear();
+      const num = Math.floor(100 + Math.random() * 900);
+      document.getElementById('inputCertCode').value = `KND-LH-${year}-${num}`;
+    }
+
+    function setTodayDate() {
+      const now = new Date();
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      document.getElementById('inputVerificationDate').value = `${day}/${month}/${year}`;
+    }
+
+    function setTodayDateIfNotSet() {
+      const dateEl = document.getElementById('inputVerificationDate');
+      if (!dateEl.value) setTodayDate();
+    }
+
+    function updateVerificationText(status) {
+      // Automatic text helper if needed
+    }
+
+    // Handle Form Submit (Create or Update)
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitForm');
+      const oldText = btn.innerHTML;
+      btn.innerHTML = '⏳ Đang lưu...';
+      btn.disabled = true;
+
+      try {
+        const editId = document.getElementById('editModeId').value;
+        const isEdit = Boolean(editId);
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('inputTitle').value.trim());
+        formData.append('edition', document.getElementById('inputEdition').value.trim());
+        formData.append('certCode', document.getElementById('inputCertCode').value.trim());
+        formData.append('size', document.getElementById('inputSize').value.trim());
+        formData.append('material', document.getElementById('inputMaterial').value.trim());
+        formData.append('releaseYear', document.getElementById('inputReleaseYear').value.trim());
+        formData.append('author', document.getElementById('inputAuthor').value.trim());
+
+        const vStatus = document.getElementById('inputVerificationStatus').value;
+        formData.append('verificationStatus', vStatus);
+        formData.append('verificationStatusText', 
+          vStatus === 'verified' ? 'ĐÃ XÁC THỰC' : 
+          vStatus === 'pending' ? 'CHỜ XÁC THỰC' : 'CHƯA HỢP LỆ'
+        );
+
+        // Artwork image
+        const imgInput = document.getElementById('artworkImageInput');
+        if (imgInput.files && imgInput.files[0]) {
+          formData.append('artworkImage', imgInput.files[0]);
+        } else {
+          formData.append('existingImage', document.getElementById('imagePreview').getAttribute('src'));
+        }
+
+        const url = isEdit ? `/api/certificates/${encodeURIComponent(editId)}` : '/api/certificates';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method: method,
+          body: formData
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          alert('Lỗi: ' + (errData.error || 'Không thể lưu'));
+          return;
+        }
+
+        const savedCert = await res.json();
+        await loadAllCertificates();
+
+        // Show QR Modal immediately
+        showQrModalForCert(savedCert.certCode);
+
+      } catch (err) {
+        console.error('Error saving:', err);
+        alert('Lỗi kết nối máy chủ!');
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    // Load cert into form for editing
+    function loadCertToEdit(code) {
+      const cert = currentCertificates.find(c => c.certCode === code || c.id === code);
+      if (!cert) return;
+
+      document.getElementById('editModeId').value = cert.certCode;
+      document.getElementById('inputTitle').value = cert.title || '';
+      document.getElementById('inputEdition').value = cert.edition || '';
+      document.getElementById('inputCertCode').value = cert.certCode || '';
+      document.getElementById('inputSize').value = cert.size || '';
+      document.getElementById('inputMaterial').value = cert.material || '';
+      document.getElementById('inputReleaseYear').value = cert.releaseYear || '';
+      document.getElementById('inputAuthor').value = cert.author || '';
+      document.getElementById('inputVerificationStatus').value = cert.verificationStatus || 'verified';
+
+      if (cert.image) {
+        document.getElementById('imagePreview').src = cert.image;
+        document.getElementById('uploadPromptText').style.display = 'none';
+      }
+
+      document.getElementById('btnSubmitForm').innerHTML = '💾 Cập Nhật & Tạo Mã QR';
+      switchTab('create');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+      document.getElementById('editModeId').value = '';
+      document.getElementById('certForm').reset();
+      useSampleImage();
+      generateRandomCode();
+      setTodayDate();
+      document.getElementById('btnSubmitForm').innerHTML = '💾 Lưu & Tạo Mã QR Quét';
+    }
+
+    async function deleteCert(code) {
+      if (!confirm(`Bạn có chắc muốn xóa chứng nhận "${code}" không?`)) return;
+      try {
+        const res = await fetch(`/api/certificates/${encodeURIComponent(code)}`, { method: 'DELETE' });
+        if (res.ok) {
+          await loadAllCertificates();
+        }
+      } catch (e) {
+        alert('Lỗi xóa chứng nhận');
+      }
+    }
+
+    // Show QR Modal
+    async function showQrModalForCert(code) {
+      currentCertCode = code;
+      const cert = currentCertificates.find(c => c.certCode === code) || {};
+      const baseUrl = getActiveBaseUrl();
+      const qrApiUrl = `/api/qr/${encodeURIComponent(code)}?baseUrl=${encodeURIComponent(baseUrl)}&format=json`;
+
+      try {
+        const res = await fetch(qrApiUrl);
+        const data = await res.json();
+        
+        currentActiveQrUrl = data.targetUrl;
+        document.getElementById('modalCertCode').textContent = code;
+        document.getElementById('modalScanUrl').textContent = data.targetUrl;
+        document.getElementById('qrImageElement').src = data.qrDataUrl;
+
+        // Sticker details
+        document.getElementById('stickerQr').src = data.qrDataUrl;
+        document.getElementById('stickerTitle').textContent = cert.title || 'Tác phẩm';
+        document.getElementById('stickerEdition').textContent = cert.edition || '';
+        document.getElementById('stickerCode').textContent = code;
+
+        document.getElementById('qrModal').classList.add('active');
+      } catch (e) {
+        alert('Lỗi tạo mã QR');
+      }
+    }
+
+    function closeQrModal() {
+      document.getElementById('qrModal').classList.remove('active');
+    }
+
+    function openVerificationPage() {
+      if (currentActiveQrUrl) {
+        window.open(currentActiveQrUrl, '_blank');
+      }
+    }
+
+    function copyQrLink() {
+      if (!currentActiveQrUrl) return;
+      navigator.clipboard.writeText(currentActiveQrUrl).then(() => {
+        alert('Đã sao chép link xác thực: ' + currentActiveQrUrl);
+      }).catch(() => {
+        prompt('Sao chép link tại đây:', currentActiveQrUrl);
+      });
+    }
+
+    function downloadQrImage() {
+      const qrSrc = document.getElementById('qrImageElement').src;
+      const link = document.createElement('a');
+      link.download = `QR-${currentCertCode}.png`;
+      link.href = qrSrc;
+      link.click();
+    }
+
+    function printSticker() {
+      const stickerArea = document.getElementById('printableStickerArea');
+      stickerArea.style.display = 'block';
+      window.print();
+      stickerArea.style.display = 'none';
+    }
+
+    // Domain / Network settings
+    function openDomainSettings() {
+      document.getElementById('domainModal').classList.add('active');
+    }
+
+    function closeDomainModal() {
+      document.getElementById('domainModal').classList.remove('active');
+    }
+
+    function saveDomainSettings() {
+      const val = document.getElementById('customBaseUrlInput').value.trim();
+      if (val) {
+        localStorage.setItem('custom_scan_base_url', val);
+      } else {
+        localStorage.removeItem('custom_scan_base_url');
+      }
+      closeDomainModal();
+      alert('Đã lưu cấu hình địa chỉ quét QR!');
+    }
+
+    function resetToAutoDomain() {
+      localStorage.removeItem('custom_scan_base_url');
+      document.getElementById('customBaseUrlInput').value = systemInfo.lanUrl || window.location.origin;
+      closeDomainModal();
+      alert('Đã đặt lại về chế độ tự động nhận diện IP!');
+    }
+
+    // Preview iframe
+    function previewCurrentForm() {
+      const code = document.getElementById('inputCertCode').value.trim() || 'KND-LH-2026-007';
+      switchTab('preview');
+      document.getElementById('previewIframe').src = `/verify/${encodeURIComponent(code)}`;
+    }
+
+    function updatePreviewIframe() {
+      const code = document.getElementById('inputCertCode').value.trim() || 'KND-LH-2026-007';
+      document.getElementById('previewIframe').src = `/verify/${encodeURIComponent(code)}`;
+    }
+  </script>
+</body>
+</html>

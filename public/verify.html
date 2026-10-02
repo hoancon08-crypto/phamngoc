@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chứng Nhận Tác Phẩm Nghệ Thuật - Kột Nhà Decor</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <meta name="theme-color" content="#fbfbfa">
+  <style>
+    /* Additional refined styles matching the screenshot */
+    .app-container {
+      padding-bottom: 40px;
+    }
+    .cert-table-container {
+      margin: 4px 18px 20px 18px;
+    }
+    .cert-table-row {
+      display: flex;
+      align-items: flex-start;
+      padding: 10.5px 4px;
+      border-bottom: 1px solid #e7e9ec;
+      font-size: 15.5px;
+      line-height: 1.45;
+    }
+    .cert-table-row:last-child {
+      border-bottom: none;
+    }
+    .cert-field-label {
+      flex: 0 0 38%;
+      color: #64748b;
+      font-weight: 400;
+      letter-spacing: -0.2px;
+    }
+    .cert-field-value {
+      flex: 1;
+      color: #0f172a;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      white-space: pre-line;
+      word-break: break-word;
+    }
+    /* Subtle cloud watermark pattern */
+    .cloud-ornament-left, .cloud-ornament-right {
+      position: absolute;
+      top: 140px;
+      width: 70px;
+      height: 300px;
+      pointer-events: none;
+      opacity: 0.35;
+      background-repeat: no-repeat;
+      background-size: contain;
+      z-index: 1;
+    }
+    .cloud-ornament-left {
+      left: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200'%3E%3Cpath d='M-10,30 C20,20 40,50 30,80 C15,100 -5,80 -10,100 M-10,120 C35,110 50,150 25,180' fill='none' stroke='%23d4af37' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+    .cloud-ornament-right {
+      right: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 200'%3E%3Cpath d='M110,40 C80,25 60,60 70,90 C85,110 105,85 110,110 M110,130 C75,120 60,160 85,185' fill='none' stroke='%23d4af37' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+    /* Fullscreen Lightbox */
+    .lightbox {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .lightbox.active {
+      display: flex;
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      font-size: 32px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      line-height: 1;
+    }
+    /* Floating action buttons */
+    .view-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 20px 0 20px;
+      position: relative;
+      z-index: 2;
+    }
+    .btn-action-small {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid #d1d5db;
+      color: #374151;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .btn-action-small:active {
+      background: #f3f4f6;
+    }
+    .badge-icon-verified {
+      background: #22c55e;
+      color: white;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Cloud pattern decorative layers -->
+    <div class="cloud-bg"></div>
+    <div class="cloud-border-decor"></div>
+    <div class="cloud-ornament-left"></div>
+    <div class="cloud-ornament-right"></div>
+
+    <!-- Header with Brand Logo & Menu -->
+    <header class="cert-header">
+      <div style="width: 28px;"></div> <!-- Spacer for balance -->
+      <div class="cert-logo-container">
+        <img id="brandLogo" class="cert-logo-img" src="/assets/sample-logo.png" alt="Kột Nhà Decor" onerror="this.style.display='none'; document.getElementById('brandText').style.display='block';">
+        <span id="brandText" class="cert-logo-text" style="display: none;">KỘT NHÀ DECOR</span>
+      </div>
+      <button class="btn-menu-icon" onclick="toggleMenu()" title="Tùy chọn">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </header>
+
+    <!-- Artwork Display Frame -->
+    <section class="cert-art-card">
+      <img id="artImage" class="cert-art-img" src="/assets/sample-artwork.jpg" alt="Tác phẩm" onclick="openLightbox()">
+    </section>
+
+    <!-- Verification Badge (Green Pill: ✔ ĐÃ XÁC THỰC) -->
+    <section class="cert-badge-wrapper">
+      <div id="verifiedBadge" class="verified-pill">
+        <span id="badgeIcon" class="badge-icon-verified">✓</span>
+        <span id="badgeText" class="verified-text">ĐÃ XÁC THỰC</span>
+      </div>
+    </section>
+
+    <!-- Details Table (Matching original format) -->
+    <section class="cert-table-container">
+      <div class="cert-table-row">
+        <div class="cert-field-label">Tác phẩm</div>
+        <div id="valTitle" class="cert-field-value">Long Tranh Hổ Đấu</div>
+      </div>
+      <div class="cert-table-row">
+        <div class="cert-field-label">Phiên bản</div>
+        <div id="valEdition" class="cert-field-value">07 / 50</div>
+      </div>
+      <div class="cert-table-row">
+        <div class="cert-field-label">Mã chứng nhận:</div>
+        <div id="valCertCode" class="cert-field-value">KND-LH-2026-007</div>
+      </div>
+      <div class="cert-table-row">
+        <div class="cert-field-label">Kích thước</div>
+        <div id="valSize" class="cert-field-value">50 x 70 cm</div>
+      </div>
+      <div class="cert-table-row">
+        <div class="cert-field-label">Chất liệu</div>
+        <div id="valMaterial" class="cert-field-value">In canvas cao cấp</div>
+      </div>
+      <div class="cert-table-row">
+        <div class="cert-field-label">Năm phát hành</div>
+        <div id="valReleaseYear" class="cert-field-value">2026</div>
+      </div>
+      <div class="cert-table-row">
+        <div class="cert-field-label">Tác giả</div>
+        <div id="valAuthor" class="cert-field-value">Phạm Ngọc<br>(Kột Nhà Decor)</div>
+      </div>
+    </section>
+
+    <!-- Bottom Actions -->
+    <div class="view-actions">
+      <a href="/" class="btn-action-small">
+        ⚙️ Chỉnh sửa / Quản lý
+      </a>
+      <button class="btn-action-small" onclick="shareCertificate()">
+        🔗 Chia sẻ
+      </button>
+      <button class="btn-action-small" onclick="window.print()">
+        🖨️ In
+      </button>
+    </div>
+
+    <!-- Security & Trust Seal -->
+    <footer class="cert-trust-badge">
+      <div class="stamp-icon">🛡️</div>
+      <div>Chứng nhận nguồn gốc tác phẩm chính hãng</div>
+      <div style="font-size: 11px; margin-top: 2px; color: #b0b7c3;">Kột Nhà Decor &bull; Xác thực số điện tử</div>
+    </footer>
+  </div>
+
+  <!-- Fullscreen Lightbox for Artwork -->
+  <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+    <img id="lightboxImg" class="lightbox-img" src="" alt="Phóng to">
+  </div>
+
+  <script>
+    // Get certificate ID from URL: /verify/:id or ?id=:id
+    function getCertIdFromUrl() {
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      if (pathParts.length >= 2 && pathParts[0] === 'verify') {
+        return decodeURIComponent(pathParts[1]);
+      }
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id') || 'KND-LH-2026-007';
+    }
+
+    async function loadCertificate() {
+      const certId = getCertIdFromUrl();
+      try {
+        const res = await fetch(`/api/certificates/${encodeURIComponent(certId)}`);
+        if (res.ok) {
+          const cert = await res.json();
+          renderCertificate(cert);
+          return;
+        }
+      } catch (e) {
+        console.warn('Could not fetch from server, checking local fallback', e);
+      }
+
+      // Check if data is stored in localStorage (offline mode)
+      const localData = localStorage.getItem(`cert_${certId}`);
+      if (localData) {
+        try {
+          renderCertificate(JSON.parse(localData));
+          return;
+        } catch (err) {}
+      }
+    }
+
+    function renderCertificate(cert) {
+      if (!cert) return;
+      document.title = `${cert.title || 'Tác phẩm'} - Xác thực chứng nhận`;
+
+      if (cert.title) document.getElementById('valTitle').textContent = cert.title;
+      if (cert.edition) document.getElementById('valEdition').textContent = cert.edition;
+      if (cert.certCode) document.getElementById('valCertCode').textContent = cert.certCode;
+      if (cert.size) document.getElementById('valSize').textContent = cert.size;
+      if (cert.material) document.getElementById('valMaterial').textContent = cert.material;
+      if (cert.releaseYear) document.getElementById('valReleaseYear').textContent = cert.releaseYear;
+      if (cert.author) document.getElementById('valAuthor').innerHTML = cert.author.replace(/\n/g, '<br>');
+
+      // Artwork image
+      if (cert.image) {
+        document.getElementById('artImage').src = cert.image;
+      }
+
+      // Logo
+      if (cert.logo) {
+        const logoImg = document.getElementById('brandLogo');
+        logoImg.src = cert.logo;
+        logoImg.style.display = 'block';
+        document.getElementById('brandText').style.display = 'none';
+      } else if (cert.brandName) {
+        document.getElementById('brandLogo').style.display = 'none';
+        const brandText = document.getElementById('brandText');
+        brandText.textContent = cert.brandName;
+        brandText.style.display = 'block';
+      }
+
+      // Verification Badge Styling
+      const badge = document.getElementById('verifiedBadge');
+      const badgeIcon = document.getElementById('badgeIcon');
+      const badgeText = document.getElementById('badgeText');
+      
+      const vStatus = cert.verificationStatus || 'verified';
+      badge.className = 'verified-pill';
+
+      if (vStatus === 'verified') {
+        badgeIcon.textContent = '✓';
+        badgeIcon.style.backgroundColor = '#22c55e';
+        badgeText.textContent = cert.verificationStatusText || 'ĐÃ XÁC THỰC';
+        badgeText.style.color = '#15803d';
+        badge.style.borderColor = '#22c55e';
+      } else if (vStatus === 'pending') {
+        badge.classList.add('status-pending');
+        badgeIcon.textContent = '⏳';
+        badgeIcon.style.backgroundColor = '#f59e0b';
+        badgeText.textContent = cert.verificationStatusText || 'CHỜ XÁC THỰC';
+        badgeText.style.color = '#b45309';
+        badge.style.borderColor = '#f59e0b';
+      } else if (vStatus === 'invalid') {
+        badge.classList.add('status-invalid');
+        badgeIcon.textContent = '✕';
+        badgeIcon.style.backgroundColor = '#ef4444';
+        badgeText.textContent = cert.verificationStatusText || 'CHƯA HỢP LỆ';
+        badgeText.style.color = '#b91c1c';
+        badge.style.borderColor = '#ef4444';
+      }
+    }
+
+    function openLightbox() {
+      const artSrc = document.getElementById('artImage').src;
+      document.getElementById('lightboxImg').src = artSrc;
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    function toggleMenu() {
+      window.location.href = '/';
+    }
+
+    async function shareCertificate() {
+      const shareUrl = window.location.href;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: document.title,
+            text: `Chứng nhận xác thực tác phẩm: ${document.getElementById('valTitle').textContent}`,
+            url: shareUrl
+          });
+        } catch (e) {
+          // Fallback to copy
+          copyLink(shareUrl);
+        }
+      } else {
+        copyLink(shareUrl);
+      }
+    }
+
+    function copyLink(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Đã sao chép link xác thực vào bộ nhớ đệm!');
+      }).catch(() => {
+        prompt('Sao chép link xác thực tại đây:', url);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCertificate);
+  </script>
+</body>
+</html>
