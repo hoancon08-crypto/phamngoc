@@ -1083,19 +1083,56 @@
       }
     }
 
-    async function deleteArtworkFolder(idOrTitle) {
-      if (!confirm(`Bạn có chắc muốn xóa thư mục tranh này?`)) return;
+    async function confirmDeleteParentFolder(id, title, certCount) {
+      const folderName = title || id;
+      const count = certCount !== undefined ? certCount : 0;
+      const msg = count > 0
+        ? `⚠️ CẢNH BÁO QUAN TRỌNG!\n\nBạn có chắc chắn muốn XÓA THƯ MỤC TRANH:\n"${folderName}"?\n\nToàn bộ ${count} bản in và mã QR thuộc tranh này sẽ bị XÓA VĨNH VIỄN!\n\nBấm OK để xác nhận xóa.`
+        : `⚠️ Bạn có chắc chắn muốn xóa thư mục tranh "${folderName}"?`;
+
+      if (!confirm(msg)) return;
+
       try {
-        const res = await fetch(`/api/artworks/${encodeURIComponent(idOrTitle)}`, { method: 'DELETE' });
+        const res = await fetch(`/api/artworks/${encodeURIComponent(id)}`, { method: 'DELETE' });
         if (res.ok) {
           await loadArtworkFolders();
           await loadAllCertificates();
-          alert('Đã xóa thư mục tranh.');
+          alert(`✅ Đã xóa thành công thư mục tranh "${folderName}"!`);
         } else {
           const data = await res.json();
           alert('Lỗi: ' + (data.error || 'Không thể xóa'));
         }
       } catch (e) {
+        console.error(e);
+        alert('Lỗi kết nối máy chủ');
+      }
+    }
+
+    function deleteArtworkFolder(idOrTitle) {
+      return confirmDeleteParentFolder(idOrTitle, idOrTitle, 0);
+    }
+
+    async function confirmDeleteSubfolder(certCode, edition, owner, title) {
+      const ownerInfo = (owner && owner !== 'Chưa kích hoạt' && owner.trim() !== '') 
+        ? `\n👤 Khách sở hữu: ${owner}` 
+        : '\n👤 Khách sở hữu: Chưa kích hoạt';
+
+      const msg = `⚠️ XÁC NHẬN XÓA BẢN IN:\n\nTác phẩm: ${title || 'Tranh'}\nPhiên bản: ${edition}${ownerInfo}\nMã chứng nhận: ${certCode}\n\nSau khi xóa, mã QR này sẽ bị hủy vĩnh viễn và không thể quét được nữa!\n\nBạn có chắc chắn muốn xóa?`;
+
+      if (!confirm(msg)) return;
+
+      try {
+        const res = await fetch(`/api/certificates/${encodeURIComponent(certCode)}`, { method: 'DELETE' });
+        if (res.ok) {
+          await loadArtworkFolders();
+          await loadAllCertificates();
+          alert(`✅ Đã xóa thành công Bản ${edition} (Mã: ${certCode})!`);
+        } else {
+          const data = await res.json();
+          alert('Lỗi: ' + (data.error || 'Không thể xóa'));
+        }
+      } catch (e) {
+        console.error(e);
         alert('Lỗi kết nối máy chủ');
       }
     }
@@ -1262,6 +1299,9 @@
                   <button type="button" class="btn-secondary-sm" onclick="selectFolderAndCreate('${group.title.replace(/'/g, "\\'")}')" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
                     ✏️ Mở Tab 1
                   </button>
+                  <button type="button" class="btn-secondary-sm" onclick="event.stopPropagation(); confirmDeleteParentFolder('${group.id || group.title}', '${group.title.replace(/'/g, "\\'")}', ${group.items.length})" style="color: #dc2626; border-color: #fca5a5; background: #fff5f5; font-weight: 700;" title="Xóa thư mục mẹ này và toàn bộ các bản in">
+                    🗑️ Xóa Thư Mục
+                  </button>
                 </div>
               </div>
 
@@ -1325,6 +1365,9 @@
                       <a href="/verify/${encodeURIComponent(c.certCode)}" target="_blank" class="btn-subfolder" onclick="event.stopPropagation()" title="Xem trang khách hàng">
                         👁️ Xem Trang Quét
                       </a>
+                      <button type="button" class="btn-subfolder" onclick="event.stopPropagation(); confirmDeleteSubfolder('${c.certCode}', '${c.edition}', '${c.owner || ''}', '${group.title.replace(/'/g, "\\'")}')" style="color: #dc2626; border-color: #fca5a5; background: #fff5f5;" title="Xóa bản in này">
+                        🗑️ Xóa Bản Này
+                      </button>
                     </div>
                   </div>
                 `;}).join('')}

@@ -209,12 +209,23 @@ app.delete('/api/artworks/:id', (req, res) => {
     let artworks = getArtworks();
     const id = req.params.id;
     const initialLen = artworks.length;
+    const targetArtwork = artworks.find(a => a.id === id || a.title.toLowerCase() === id.toLowerCase());
+
     artworks = artworks.filter(a => a.id !== id && a.title.toLowerCase() !== id.toLowerCase());
     if (artworks.length === initialLen) {
       return res.status(404).json({ error: 'Không tìm thấy thư mục' });
     }
     saveArtworks(artworks);
-    res.json({ success: true, message: 'Đã xóa thư mục tranh' });
+
+    // Also clean up all certificates belonging to this artwork
+    if (targetArtwork && targetArtwork.title) {
+      let certs = getCertificates();
+      const targetTitleNorm = removeVietnameseTones(targetArtwork.title).toLowerCase().trim();
+      certs = certs.filter(c => removeVietnameseTones(c.title || '').toLowerCase().trim() !== targetTitleNorm);
+      saveCertificates(certs);
+    }
+
+    res.json({ success: true, message: 'Đã xóa thư mục tranh và toàn bộ các bản in liên quan' });
   } catch (err) {
     res.status(500).json({ error: 'Lỗi xóa thư mục: ' + err.message });
   }

@@ -150,11 +150,7 @@
         <img id="brandLogo" class="cert-logo-img" src="/assets/sample-logo.png" alt="Kột Nhà Decor" onerror="this.style.display='none'; document.getElementById('brandText').style.display='block';">
         <span id="brandText" class="cert-logo-text" style="display: none;">KỘT NHÀ DECOR</span>
       </div>
-      <button class="btn-menu-icon" onclick="toggleMenu()" title="Tùy chọn">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <div style="width: 28px;"></div> <!-- Spacer for balance -->
     </header>
 
     <!-- Artwork Display Frame -->
@@ -205,16 +201,13 @@
       </div>
     </section>
 
-    <!-- Bottom Actions -->
+    <!-- Bottom Actions for Customers (Only View / Share / Print) -->
     <div class="view-actions">
-      <a href="/" class="btn-action-small">
-        ⚙️ Chỉnh sửa / Quản lý
-      </a>
       <button class="btn-action-small" onclick="shareCertificate()">
-        🔗 Chia sẻ
+        🔗 Chia sẻ chứng nhận
       </button>
       <button class="btn-action-small" onclick="window.print()">
-        🖨️ In
+        🖨️ In chứng nhận
       </button>
     </div>
 
@@ -349,10 +342,6 @@
 
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('active');
-    }
-
-    function toggleMenu() {
-      window.location.href = '/';
     }
 
     async function shareCertificate() {
