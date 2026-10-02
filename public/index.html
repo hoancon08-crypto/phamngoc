@@ -571,7 +571,10 @@
           <div class="card-title" style="margin-bottom: 0;">
             <span>📚</span> Danh Sách Tranh Đã Cấp Mã
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn-secondary-sm" onclick="toggleAllParentFolders()" id="btnGlobalToggleFolders" style="padding: 7px 12px; font-size: 13px;" title="Mở hoặc thu gọn tất cả thư mục tranh">
+              <span>🔽 Mở tất cả</span>
+            </button>
             <button type="button" class="btn-primary" style="background: #ea580c; border-color: #ea580c; padding: 7px 14px; font-size: 13px;" onclick="openNewFolderModal()">
               📁 + Tạo Thư Mục Mới
             </button>
@@ -1216,8 +1219,8 @@
 
         return `
           <div class="artwork-folder-card">
-            <!-- Thư mục Mẹ (Header) -->
-            <div class="folder-header" onclick="toggleFolder('${folderId}')">
+            <!-- Thư mục Mẹ (Header) - Bấm vào để mở ra / thu gọn -->
+            <div class="folder-header" onclick="toggleFolder('${folderId}', ${group.items.length})" title="Bấm để mở xem hoặc thu gọn các bản in">
               <img src="${group.image}" class="folder-thumb" alt="${group.title}">
               <div class="folder-info">
                 <div class="folder-title-row">
@@ -1238,27 +1241,30 @@
                 </div>
               </div>
               <div>
-                <button type="button" class="folder-toggle-btn" id="btnToggle_${folderId}">
-                  <span>📂 Xem ${group.items.length} bản</span>
+                <button type="button" class="folder-toggle-btn" id="btnToggle_${folderId}" title="Bấm để mở xem hoặc thu gọn">
+                  <span class="folder-toggle-text">📂 Xem ${group.items.length} bản</span>
                   <span id="arrow_${folderId}">▼</span>
                 </button>
               </div>
             </div>
 
-            <!-- Thanh chức năng nhanh của Thư mục mẹ -->
-            <div class="folder-actions-bar">
-              <div style="font-size: 12.5px; color: #475569;">
-                Mã tranh: <strong>${group.items[0]?.certCode?.split('-').slice(0, 3).join('-') || 'KND'}</strong> (từ bản 01 đến ${String(group.items.length).padStart(2, '0')})
+            <!-- Danh sách các Thư Mục Con (Mặc định thu gọn - Ẩn hết) -->
+            <div id="${folderId}" class="folder-body">
+              <!-- Thanh chức năng nhanh của Thư mục mẹ -->
+              <div class="folder-actions-bar" style="border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+                <div style="font-size: 12.5px; color: #475569;">
+                  Mã tranh: <strong>${group.items[0]?.certCode?.split('-').slice(0, 3).join('-') || 'KND'}</strong> (từ bản 01 đến ${String(group.items.length).padStart(2, '0')})
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" class="btn-primary" onclick="openNewSubfolderModal('${group.title.replace(/'/g, "\\'")}', ${group.items.length + 1}, ${group.totalLimit})" style="background: #15803d; border-color: #15803d; padding: 6px 14px; font-size: 13px; font-weight: 700;">
+                    📁 ➕ Tạo Thư Mục Con (Bản ${String(group.items.length + 1).padStart(2, '0')})
+                  </button>
+                  <button type="button" class="btn-secondary-sm" onclick="selectFolderAndCreate('${group.title.replace(/'/g, "\\'")}')" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
+                    ✏️ Mở Tab 1
+                  </button>
+                </div>
               </div>
-              <div style="display: flex; gap: 8px;">
-                <button type="button" class="btn-secondary-sm" onclick="selectFolderAndCreate('${group.title.replace(/'/g, "\\'")}')" style="color: #15803d; border-color: #86efac; font-weight: 700; background: #f0fdf4;">
-                  ➕ Tạo bản tiếp theo
-                </button>
-              </div>
-            </div>
 
-            <!-- Danh sách các Thư Mục Con (Mở rộng mặc định) -->
-            <div id="${folderId}" class="folder-body expanded">
               <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <input type="text" placeholder="🔍 Tìm kiếm thư mục con (VD: 01) hoặc tên khách..." 
                   style="flex: 1; min-width: 200px; max-width: 380px; padding: 8px 12px; font-size: 13px; border: 1.5px solid #cbd5e1; border-radius: 8px;"
@@ -1415,7 +1421,7 @@
       }
     }
 
-    function toggleFolder(folderId) {
+    function toggleFolder(folderId, count) {
       const folderBody = document.getElementById(folderId);
       const arrow = document.getElementById('arrow_' + folderId);
       const btn = document.getElementById('btnToggle_' + folderId);
@@ -1425,11 +1431,57 @@
       if (isExpanded) {
         folderBody.classList.remove('expanded');
         if (arrow) arrow.textContent = '▼';
-        if (btn) btn.style.background = '#ffffff';
+        if (btn) {
+          btn.style.background = '#ffffff';
+          const txt = btn.querySelector('.folder-toggle-text');
+          if (txt) txt.textContent = `📂 Xem ${count !== undefined ? count + ' ' : ''}bản`;
+        }
       } else {
         folderBody.classList.add('expanded');
         if (arrow) arrow.textContent = '▲';
-        if (btn) btn.style.background = '#e2e8f0';
+        if (btn) {
+          btn.style.background = '#e2e8f0';
+          const txt = btn.querySelector('.folder-toggle-text');
+          if (txt) txt.textContent = `📁 Thu gọn`;
+        }
+      }
+    }
+
+    function toggleAllParentFolders() {
+      const allBodies = document.querySelectorAll('.folder-body');
+      const globalBtn = document.getElementById('btnGlobalToggleFolders');
+      if (!allBodies || allBodies.length === 0) return;
+
+      const hasCollapsed = Array.from(allBodies).some(el => !el.classList.contains('expanded'));
+
+      allBodies.forEach(el => {
+        const fId = el.id;
+        const arrow = document.getElementById('arrow_' + fId);
+        const btn = document.getElementById('btnToggle_' + fId);
+
+        if (hasCollapsed) {
+          el.classList.add('expanded');
+          if (arrow) arrow.textContent = '▲';
+          if (btn) {
+            btn.style.background = '#e2e8f0';
+            const txt = btn.querySelector('.folder-toggle-text');
+            if (txt) txt.textContent = '📁 Thu gọn';
+          }
+        } else {
+          el.classList.remove('expanded');
+          if (arrow) arrow.textContent = '▼';
+          if (btn) {
+            btn.style.background = '#ffffff';
+            const txt = btn.querySelector('.folder-toggle-text');
+            if (txt) txt.textContent = '📂 Xem bản';
+          }
+        }
+      });
+
+      if (globalBtn) {
+        globalBtn.innerHTML = hasCollapsed
+          ? '<span>🔼 Thu gọn tất cả</span>'
+          : '<span>🔽 Mở tất cả</span>';
       }
     }
 
