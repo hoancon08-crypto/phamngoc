@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>In Hàng Loạt Tem Decal QR - Kột Nhà Decor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #f97316;
+      --primary-dark: #ea580c;
+      --text-main: #0f172a;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f1f5f9;
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Control Bar (Hidden when printing) */
+    .control-header {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 16px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .control-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .control-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .control-title h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .control-title .badge {
+      background: #ffedd5;
+      color: #c2410c;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .control-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-print {
+      background: #f97316;
+      color: #ffffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
+      transition: all 0.2s;
+    }
+
+    .btn-print:hover {
+      background: #ea580c;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: #334155;
+      border: 1.5px solid #cbd5e1;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .size-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .size-selector select {
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      color: #0f172a;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Print Preview Wrapper */
+    .print-canvas {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .status-summary {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #065f46;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Sticker Grid: Standard A4 Decal format */
+    .stickers-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    /* Size 1: 12 stickers per A4 (3 columns x 4 rows) */
+    .grid-size-12 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* Size 2: 20 stickers per A4 (4 columns x 5 rows) */
+    .grid-size-20 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Size 3: 24 stickers per A4 (4 columns x 6 rows) */
+    .grid-size-24 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Individual Sticker Card */
+    .sticker-item {
+      background: #ffffff;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .sticker-item:hover {
+      border-color: #f97316;
+    }
+
+    .sticker-brand {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ea580c;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .sticker-qr-wrapper {
+      background: #ffffff;
+      padding: 4px;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 4px 0;
+    }
+
+    .sticker-qr-img {
+      width: 125px;
+      height: 125px;
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .grid-size-20 .sticker-qr-img,
+    .grid-size-24 .sticker-qr-img {
+      width: 95px;
+      height: 95px;
+    }
+
+    .sticker-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-top: 4px;
+    }
+
+    .grid-size-20 .sticker-title,
+    .grid-size-24 .sticker-title {
+      font-size: 12px;
+    }
+
+    .sticker-edition-badge {
+      display: inline-block;
+      background: #f0fdf4;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 4px 0 2px 0;
+    }
+
+    .sticker-code {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #475569;
+      letter-spacing: 0.3px;
+    }
+
+    .sticker-trust {
+      font-size: 9.5px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    /* ================= PRINT STYLES ================= */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 6mm;
+      }
+
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+
+      .control-header,
+      .status-summary,
+      .no-print {
+        display: none !important;
+      }
+
+      .print-canvas {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      .stickers-grid {
+        gap: 6mm !important;
+      }
+
+      .sticker-item {
+        border: 1px dashed #94a3b8 !important;
+        border-radius: 8px !important;
+        padding: 6px !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .sticker-brand {
+        color: #c2410c !important;
+      }
+
+      .sticker-qr-img {
+        width: 110px !important;
+        height: 110px !important;
+      }
+
+      .grid-size-20 .sticker-qr-img,
+      .grid-size-24 .sticker-qr-img {
+        width: 85px !important;
+        height: 85px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Control Bar -->
+  <header class="control-header">
+    <div class="control-container">
+      <div class="control-title">
+        <h1>🖨️ In Hàng Loạt Tem Decal QR</h1>
+        <span class="badge" id="artworkTitleBadge">Long Tranh Hổ Đấu</span>
+        <span style="font-size: 13px; color: #64748b; font-weight: 600;" id="batchCountBadge">Tổng 50 tem</span>
+      </div>
+
+      <div class="control-actions">
+        <div class="size-selector">
+          <label for="gridSizeSelect">Khổ in:</label>
+          <select id="gridSizeSelect" onchange="changeGridSize(this.value)">
+            <option value="12" selected>Khổ To (12 tem / trang A4)</option>
+            <option value="20">Khổ Vừa (20 tem / trang A4)</option>
+            <option value="24">Khổ Nhỏ (24 tem / trang A4)</option>
+          </select>
+        </div>
+
+        <button class="btn-print" onclick="window.print()">
+          🖨️ In Tất Cả 50 Tem (Ctrl + P)
+        </button>
+
+        <a href="/" class="btn-outline">
+          ⬅ Quay lại Quản lý
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Canvas -->
+  <main class="print-canvas">
+    <div class="status-summary no-print">
+      <div>
+        <strong>✅ Đã sắp xếp sẵn toàn bộ 50 mã QR theo thứ tự từ 01/50 đến 50/50!</strong>
+        <div style="font-size: 12.5px; color: #047857; margin-top: 2px;">
+          Mỗi mã QR đều được liên kết trực tiếp với trang xác thực đám mây 24/7 của Kột Nhà Decor.
+        </div>
+      </div>
+      <div>
+        <button class="btn-outline" style="background:#ffffff; color:#065f46; border-color:#6ee7b7; font-size:12px; padding:6px 12px;" onclick="window.print()">
+          In ngay
+        </button>
+      </div>
+    </div>
+
+    <!-- Stickers Container -->
+    <div id="stickersContainer" class="stickers-grid grid-size-12">
+      <!-- Dynamically Rendered -->
+      <div style="text-align: center; padding: 40px; color: #94a3b8; grid-column: 1 / -1;">
+        ⏳ Đang tải và tạo 50 mã QR độ phân giải cao...
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let batchData = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadBatchQRCodes();
+    });
+
+    function getActiveBaseUrl() {
+      const custom = localStorage.getItem('custom_scan_base_url');
+      if (custom && !custom.includes('192.168.')) return custom.replace(/\/$/, '');
+      if (window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('192.168.')) {
+        return window.location.origin;
+      }
+      return 'https://phamngoc.onrender.com';
+    }
+
+    async function loadBatchQRCodes() {
+      const container = document.getElementById('stickersContainer');
+      const baseUrl = getActiveBaseUrl();
+      const title = 'Long Tranh Hổ Đấu';
+
+      try {
+        const res = await fetch(`/api/batch-qr?title=${encodeURIComponent(title)}&baseUrl=${encodeURIComponent(baseUrl)}`);
+        if (!res.ok) throw new Error('Không thể tải mã QR');
+        
+        const data = await res.json();
+        batchData = data.items || [];
+
+        document.getElementById('artworkTitleBadge').textContent = data.title || title;
+        document.getElementById('batchCountBadge').textContent = `Tổng ${batchData.length} tem`;
+
+        renderStickers(batchData);
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #ef4444; grid-column: 1 / -1;">
+            ⚠️ Lỗi khi tải mã QR hàng loạt. Vui lòng thử lại!
+          </div>
+        `;
+      }
+    }
+
+    function renderStickers(items) {
+      const container = document.getElementById('stickersContainer');
+      if (!items || items.length === 0) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px; color: #94a3b8; grid-column: 1 / -1;">Không có tem nào.</div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="sticker-item">
+          <div class="sticker-brand">KỘT NHÀ DECOR</div>
+          <div class="sticker-qr-wrapper">
+            <img class="sticker-qr-img" src="${item.qrDataUrl}" alt="${item.certCode}">
+          </div>
+          <div class="sticker-title">${item.title}</div>
+          <div class="sticker-edition-badge">Phiên bản: ${item.edition}</div>
+          <div class="sticker-code">${item.certCode}</div>
+          <div class="sticker-trust">Quét mã để xác thực chính hãng</div>
+        </div>
+      `).join('');
+    }
+
+    function changeGridSize(size) {
+      const container = document.getElementById('stickersContainer');
+      container.className = `stickers-grid grid-size-${size}`;
+    }
+  </script>
+</body>
+</html>

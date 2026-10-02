@@ -247,6 +247,168 @@ app.delete('/api/certificates/:id', (req, res) => {
   res.json({ success: true, message: 'Đã xóa chứng nhận' });
 });
 
+// Remove Vietnamese accents / diacritics
+function removeVietnameseTones(str) {
+  if (!str) return '';
+  str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  str = str.replace(/[đĐ]/g, (m) => m === 'Đ' ? 'D' : 'd');
+  return str;
+}
+
+// Generate acronym from artwork title (e.g. "Long Tranh Hổ Đấu" -> "LTHD")
+function getTitleAbbreviation(title) {
+  if (!title) return 'TRANH';
+  const clean = removeVietnameseTones(title).replace(/[^a-zA-Z0-9\s]/g, ' ').trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return 'TRANH';
+  const abbr = words.map(w => w[0].toUpperCase()).join('');
+  return abbr || 'TRANH';
+}
+
+// API: Batch generate certificates for an artwork edition (e.g. 1 to 50)
+app.post('/api/certificates/batch-generate', (req, res) => {
+  try {
+    const {
+      title = 'Long Tranh Hổ Đấu',
+      totalLimit = 50,
+      startSerial = 1,
+      endSerial = 50,
+      size = '50 x 70 cm',
+      releaseYear = '2026',
+      author = 'Phạm Ngọc\n(Kột Nhà Decor)',
+      ownerDefault = 'Chưa kích hoạt',
+      image = '/assets/sample-artwork.jpg',
+      logo = '/assets/sample-logo.png',
+      brandName = 'KỘT NHÀ DECOR'
+    } = req.body;
+
+    const certs = getCertificates();
+    const abbr = getTitleAbbreviation(title);
+    const start = Math.max(1, parseInt(startSerial, 10) || 1);
+    const end = Math.max(start, parseInt(endSerial, 10) || 50);
+    const total = Math.max(end, parseInt(totalLimit, 10) || 50);
+    const padLength = total >= 100 ? 3 : 2;
+
+    const generated = [];
+
+    for (let i = start; i <= end; i++) {
+      const serialPadded = String(i).padStart(3, '0');
+      const editionSerialPadded = String(i).padStart(padLength, '0');
+      const code = `KND-${abbr}-${releaseYear}-${serialPadded}`;
+      const editionStr = `${editionSerialPadded} / ${total}`;
+
+      // Check if certificate already exists
+      const existingIdx = certs.findIndex(c => c.certCode === code || c.id === code || (c.altCode && c.altCode === code));
+
+      if (existingIdx !== -1) {
+        // Keep existing certificate (especially owner or existing photo), update edition string if needed
+        generated.push(certs[existingIdx]);
+      } else {
+        const newCert = {
+          id: code,
+          certCode: code,
+          title: title,
+          verificationStatus: 'verified',
+          verificationStatusText: 'ĐÃ XÁC THỰC',
+          edition: editionStr,
+          size: size,
+          material: 'In canvas cao cấp',
+          releaseYear: String(releaseYear),
+          author: author,
+          status: 'Đã phát hành',
+          owner: ownerDefault,
+          verificationDate: new Date().toLocaleDateString('vi-VN'),
+          image: image,
+          logo: logo,
+          brandName: brandName,
+          note: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        certs.push(newCert);
+        generated.push(newCert);
+      }
+    }
+
+    saveCertificates(certs);
+    res.json({
+      success: true,
+      count: generated.length,
+      certificates: generated
+    });
+  } catch (err) {
+    console.error('Error batch generating certificates:', err);
+    res.status(500).json({ error: 'Lỗi tạo hàng loạt: ' + err.message });
+  }
+});
+
+// API: Batch generate QR codes data URLs for an artwork
+app.get('/api/batch-qr', async (req, res) => {
+  try {
+    const title = req.query.title || 'Long Tranh Hổ Đấu';
+    const certs = getCertificates();
+    const targetNorm = removeVietnameseTones(title).trim().toLowerCase();
+
+    // Filter certificates for this artwork
+    let matchingCerts = certs.filter(c => {
+      const itemNorm = removeVietnameseTones(c.title || '').trim().toLowerCase();
+      return itemNorm === targetNorm || itemNorm.includes(targetNorm);
+    });
+
+    if (matchingCerts.length === 0) {
+      matchingCerts = certs;
+    }
+
+    // Sort by edition serial order
+    matchingCerts.sort((a, b) => {
+      const numA = parseInt((a.edition || '').split('/')[0] || '0', 10);
+      const numB = parseInt((b.edition || '').split('/')[0] || '0', 10);
+      return numA - numB;
+    });
+
+    const customBase = req.query.baseUrl;
+    const publicTunnel = getPublicTunnelUrl();
+    let baseDomain = 'https://phamngoc.onrender.com';
+    if (customBase && !customBase.includes('192.168.') && !customBase.includes('localhost')) {
+      baseDomain = customBase.replace(/\/$/, '');
+    } else if (publicTunnel) {
+      baseDomain = publicTunnel.replace(/\/$/, '');
+    }
+
+    const items = await Promise.all(matchingCerts.map(async (c) => {
+      const targetUrl = `${baseDomain}/verify/${encodeURIComponent(c.certCode || c.id)}`;
+      const qrDataUrl = await QRCode.toDataURL(targetUrl, {
+        width: 320,
+        margin: 1,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff'
+        }
+      });
+      return {
+        id: c.id,
+        certCode: c.certCode,
+        title: c.title,
+        edition: c.edition,
+        owner: c.owner,
+        targetUrl: targetUrl,
+        qrDataUrl: qrDataUrl
+      };
+    }));
+
+    res.json({
+      success: true,
+      title: title,
+      baseDomain: baseDomain,
+      count: items.length,
+      items: items
+    });
+  } catch (err) {
+    console.error('Error generating batch QR:', err);
+    res.status(500).json({ error: 'Lỗi tạo mã QR hàng loạt' });
+  }
+});
+
 // API: Generate QR Code for a certificate
 app.get('/api/qr/:id', async (req, res) => {
   try {
@@ -297,6 +459,11 @@ app.get('/api/qr/:id', async (req, res) => {
     console.error('Error generating QR code:', err);
     res.status(500).json({ error: 'Lỗi tạo mã QR' });
   }
+});
+
+// Batch print sticker page route
+app.get('/batch-print', (req, res) => {
+  res.sendFile('batch-print.html', { root: path.join(__dirname, 'public') });
 });
 
 // Verification page route
